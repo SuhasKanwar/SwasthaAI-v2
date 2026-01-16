@@ -23,12 +23,7 @@ const sidebarLinks = [
         name: "Book Appointment",
         icon: <MdAddCircle />,
         link: "/u/dashboard/book-appointments",
-    },
-    {
-        name: "Help",
-        icon: <HelpCircle />,
-        link: "/u/dashboard/help",
-    },
+    }
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
