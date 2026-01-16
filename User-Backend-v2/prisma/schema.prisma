@@ -1,0 +1,509 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                                   String              @unique
+  phoneNumber                             String?             @unique @map("phone_number")
+  countryCode                             String?             @map("country_code")
+  firstName                               String              @map("first_name")
+  lastName                                String              @map("last_name")
+  dateOfBirth                             DateTime            @map("date_of_birth")
+  gender                                  String
+  languages                               String[]            @default([]) @map("languages")
+  ethnicity                               String?             @map("ethnicity")
+  securityPin                             String              @map("security_pin")
+  googleAuth                              Boolean             @default(false) @map("google_auth")
+  defaultHomeScreen                       String              @default("Mental Health") @map("default_home_screen")
+  createdAt                               DateTime            @default(now()) @map("created_at")
+  updatedAt                               DateTime            @default(now()) @map("updated_at")
+  role                                    String              @default("patient") @map("role")
+  appointments                            Appointment[]
+  chat_rooms_chat_rooms_patient_idTousers chat_rooms[]        @relation("chat_rooms_patient_idTousers")
+  emergencyContacts                       EmergencyContact[]
+  emergencyHospitals                      EmergencyHospital[]
+  emergencyProfile                        EmergencyProfile?
+  feedback                                Feedback[]
+  medAlertCategories                      MedAlertCategory[]
+  medAlertReminders                       MedAlertReminder[]
+  medAlertSettings                        MedAlertSettings?
+  medicalProfile                          MedicalProfile?
+  otpVerifications                        OtpVerification[]
+  profilePhoto                            ProfilePhoto?
+  savedAddresses                          SavedAddress[]
+  sessionLogs                             SessionLog[]
+  sosCare                                 SosCare?
+  termsAcceptance                         TermsAcceptance?
+  healthRecords                           HealthRecord[]
+  sharedRecords                           SharedRecord[]      @relation("SharedBy") // Records shared by this user
+
+  @@map("users")
+}
+
+model OtpVerification {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  otp       String
+  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("otp_verifications")
+}
+
+model TermsAcceptance {
+  userId     String   @id @map("user_id") @db.Uuid
+  accepted   Boolean  @default(false)
+  acceptedAt DateTime @default(now()) @map("accepted_at")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("terms_acceptance")
+}
+
+model SessionLog {
+  id       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId   String    @map("user_id") @db.Uuid
+  loginAt  DateTime  @default(now()) @map("login_at")
+  logoutAt DateTime? @map("logout_at")
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session_logs")
+}
+
+model ProfilePhoto {
+  userId     String   @id @map("user_id") @db.Uuid
+  photoUrl   String   @map("photo_url")
+  uploadedAt DateTime @default(now()) @map("uploaded_at")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profile_photos")
+}
+
+model MedicalProfile {
+  userId               String   @id @map("user_id") @db.Uuid
+  bloodType            String   @map("blood_type")
+  heightCm             Float?   @map("height_cm")
+  weightKg             Float?   @map("weight_kg")
+  chronicConditions    String[] @map("chronic_conditions")
+  mentalHealthSymptoms String[] @map("mental_health_symptoms")
+  medications          String[]
+  allergies            String[]
+  surgeries            String[]
+  familyMedicalHistory String[] @map("family_medical_history")
+  currentDoctors       Json     @map("current_doctors")
+  vaccinationRecords   String[] @map("vaccination_records")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @default(now()) @map("updated_at")
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("medical_profiles")
+}
+
+model EmergencyContact {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  name        String
+  phoneNumber String   @map("phone_number")
+  countryCode String   @map("country_code")
+  relation    String
+  createdAt   DateTime @default(now()) @map("created_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("emergency_contacts")
+}
+
+model EmergencyHospital {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  name          String
+  contactNumber String?  @map("contact_number")
+  createdAt     DateTime @default(now()) @map("created_at")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("emergency_hospitals")
+}
+
+model SosCare {
+  userId             String   @id @map("user_id") @db.Uuid
+  locationPermission Boolean  @default(false) @map("location_permission")
+  sosEnabled         Boolean  @default(false) @map("sos_enabled")
+  lastLocation       Json?    @map("last_location")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @default(now()) @map("updated_at")
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sos_care")
+}
+
+model EmergencyProfile {
+  userId             String   @id @map("user_id") @db.Uuid
+  emergencyContacts  Json     @map("emergency_contacts")
+  hospitals          Json     @map("hospitals")
+  sosEnabled         Boolean  @default(false) @map("sos_enabled")
+  locationPermission Boolean  @default(false) @map("location_permission")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @default(now()) @map("updated_at")
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("emergency_profiles")
+}
+
+model SavedAddress {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  addressType       String   @map("address_type")
+  customAddressName String?  @map("custom_address_name")
+  fullName          String   @map("full_name")
+  phoneNumber       String   @map("phone_number")
+  countryCode       String   @map("country_code")
+  addressLine1      String   @map("address_line_1")
+  addressLine2      String?  @map("address_line_2")
+  city              String
+  state             String
+  postalCode        String   @map("postal_code")
+  country           String
+  familyMembers     Json     @map("family_members")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @map("updated_at")
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("saved_addresses")
+}
+
+model Feedback {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  feedbackType  String   @map("feedback_type")
+  subject       String
+  description   String
+  contactEmail  String   @map("contact_email")
+  attachmentUrl String?  @map("attachment_url")
+  status        String   @default("Pending")
+  referenceId   String   @unique @map("reference_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @map("updated_at")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("feedback")
+}
+
+model Doctor {
+  id                                     String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                                  String         @unique @db.VarChar(255)
+  password                               String         @db.VarChar(255)
+  securityPin                            String?        @db.VarChar(6)
+  loginOtp                               String?        @db.VarChar(6)
+  loginOtpExpiry                         DateTime?
+  otp                                    String?        @db.VarChar(6)
+  otpExpiry                              DateTime?
+  lastLogin                              DateTime?
+  lastLoginAttempt                       DateTime?
+  failedLoginAttempts                    Int            @default(0)
+  isLocked                               Boolean        @default(false)
+  isVerified                             Boolean        @default(false)
+  isProfileCompleted                     Boolean        @default(false)
+  createdAt                              DateTime       @default(now())
+  updatedAt                              DateTime       @default(now())
+  chat_rooms_chat_rooms_doctor_idTousers chat_rooms[]   @relation("chat_rooms_doctor_idTousers")
+  profile                                DoctorProfile?
+
+  @@map("doctor")
+}
+
+model DoctorProfile {
+  userId                     String         @id @db.Uuid
+  displayName                String         @db.VarChar(255)
+  profilePicture             String?        @db.VarChar(1000)
+  specialty                  String         @db.VarChar(255)
+  expertiseAreas             Json
+  bio                        String?
+  patientsServed             Int            @default(0)
+  yearsOfExperience          Int
+  degree                     String
+  college                    String
+  certifications             Json?
+  medicalRegistrationNumber  String         @db.VarChar(100)
+  languagesSpoken            Json
+  clinics                    DoctorClinic[]
+  avgRating                  Float          @default(5.0)
+  ratingCount                Int            @default(0)
+  reviewsCount               Int            @default(0)
+  reviews                    DoctorReview[]
+  faqs                       DoctorFAQ[]
+  consultationFees           Int
+  payOnConsultation          Boolean        @default(false)
+  providesOnlineConsultation Boolean        @default(false)
+  genderPreference           String?        @default("both") @db.VarChar(20)
+  appointments               Appointment[]
+  createdAt                  DateTime       @default(now())
+  updatedAt                  DateTime       @default(now())
+  doctor                     Doctor         @relation(fields: [userId], references: [id])
+
+  @@map("doctor_profiles")
+}
+
+model DoctorClinic {
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  doctorId          String        @db.Uuid
+  name              String
+  address           String
+  googleMapsLink    String?
+  availabilityDates Json // Array of available dates
+  availabilitySlots Json // Array of time slots per date
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @default(now())
+  doctorProfile     DoctorProfile @relation(fields: [doctorId], references: [userId])
+
+  @@map("doctor_clinics")
+}
+
+model DoctorReview {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  doctorId      String        @db.Uuid
+  userId        String        @db.Uuid
+  userName      String
+  rating        Float
+  reviewText    String?
+  reviewDate    DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @default(now())
+  doctorProfile DoctorProfile @relation(fields: [doctorId], references: [userId])
+
+  @@map("doctor_reviews")
+}
+
+model DoctorFAQ {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  doctorId      String        @db.Uuid
+  question      String
+  answer        String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @default(now())
+  doctorProfile DoctorProfile @relation(fields: [doctorId], references: [userId])
+
+  @@map("doctor_faqs")
+}
+
+model Appointment {
+  id                        Int           @id @default(autoincrement())
+  doctorId                  String        @db.Uuid
+  doctorName                String        @db.VarChar(255)
+  doctorPhotoUrl            String        @db.VarChar(1000)
+  specialization            String        @db.VarChar(255)
+  clinicId                  String        @db.Uuid
+  clinicName                String        @db.VarChar(255)
+  clinicAddress             String        @db.VarChar(1000)
+  googleMapsLink            String?       @db.VarChar(1000)
+  appointmentDate           DateTime
+  appointmentSlot           String        @db.VarChar(50)
+  symptomsEntered           String?       @db.Text
+  uploadedDocuments         Json // Array of document metadata
+  patientId                 String        @db.Uuid
+  patientName               String        @db.VarChar(255)
+  patientContact            String        @db.VarChar(20)
+  addressType               String        @db.VarChar(50) // saved or new
+  paymentStatus             String        @db.VarChar(20) // Pending, Completed, Failed
+  paymentMethod             String?       @db.VarChar(50) // Credit/Debit Card, UPI, Wallet
+  payOnConsultation         Boolean       @default(false)
+  appointmentStatus         String        @db.VarChar(20) // Confirmed, Pending Doctor Confirmation
+  confirmationMessage       String?       @db.Text
+  rescheduleAvailable       Boolean       @default(true)
+  cancelAvailable           Boolean       @default(true)
+  prescriptionUrl           String?       @db.VarChar(1000)
+  previousTotalAppointments Int           @default(0)
+  rescheduledFrom           DateTime?     @map("rescheduled_from")
+  cancelReason              String?
+  createdAt                 DateTime      @default(now())
+  updatedAt                 DateTime      @default(now())
+  doctor                    DoctorProfile @relation(fields: [doctorId], references: [userId])
+  patient                   User          @relation(fields: [patientId], references: [id])
+
+  @@map("appointments")
+}
+
+model MedAlertSettings {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @unique @map("user_id") @db.Uuid
+  autoReminder Boolean  @default(false)
+  notifyEmail  Boolean  @default(true)
+  notifyPush   Boolean  @default(true)
+  notifySms    Boolean  @default(false)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @map("updated_at")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("med_alert_settings")
+}
+
+model MedAlertCategory {
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String             @map("user_id") @db.Uuid
+  name        String
+  description String?
+  color       String?
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @default(now()) @map("updated_at")
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reminders   MedAlertReminder[]
+
+  @@unique([userId, name])
+  @@map("med_alert_categories")
+}
+
+model MedAlertReminder {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String           @map("user_id") @db.Uuid
+  categoryId     String           @map("category_id") @db.Uuid
+  medicineName   String           @map("medicine_name")
+  dosage         String
+  frequency      String
+  startDate      DateTime         @map("start_date")
+  endDate        DateTime?        @map("end_date")
+  notes          String?
+  isActive       Boolean          @default(true)
+  isPaused       Boolean          @default(false)
+  isSuggested    Boolean          @default(false)
+  prescriptionId String?          @map("prescription_id")
+  timeSlot       Json             @default("[]")
+  form           String           @default("tablet")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @default(now())
+  category       MedAlertCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("med_alert_reminders")
+}
+
+model chat_messages {
+  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  room_id        String     @db.Uuid
+  sender_id      String     @db.Uuid
+  content        String
+  message_type   String     @default("text")
+  attachment_url String?
+  created_at     DateTime   @default(now())
+  is_read        Boolean    @default(false)
+  sender_type    String
+  chat_rooms     chat_rooms @relation(fields: [room_id], references: [id], onDelete: Cascade)
+}
+
+model chat_rooms {
+  id                                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  doctor_id                          String          @db.Uuid
+  patient_id                         String          @db.Uuid
+  created_at                         DateTime        @default(now())
+  updated_at                         DateTime        @default(now())
+  last_message_at                    DateTime?
+  chat_messages                      chat_messages[]
+  users_chat_rooms_doctor_idTousers  Doctor          @relation("chat_rooms_doctor_idTousers", fields: [doctor_id], references: [id], onDelete: Cascade)
+  users_chat_rooms_patient_idTousers User            @relation("chat_rooms_patient_idTousers", fields: [patient_id], references: [id], onDelete: Cascade)
+
+  @@unique([doctor_id, patient_id], map: "chat_rooms_doctor_patient_idx")
+}
+
+model HealthRecord {
+  id                      String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                  String         @map("user_id") @db.Uuid
+  date                    DateTime
+  doctorName              String         @map("doctor_name")
+  doctorRegistrationNo    String         @map("doctor_registration_no")
+  doctorSpecialization    String         @map("doctor_specialization")
+  doctorProfilePictureUrl String?        @map("doctor_profile_picture_url")
+  hospitalClinicName      String         @map("hospital_clinic_name")
+  hospitalClinicAddress   String         @map("hospital_clinic_address")
+  hospitalClinicLogoUrl   String?        @map("hospital_clinic_logo_url")
+  status                  String // UHP or UPLOADED
+  notes                   String?
+  shared                  Boolean        @default(false)
+  recordType              String         @map("record_type") // PRESCRIPTION or LAB_REPORT
+  patientName             String         @map("patient_name")
+  patientAge              Int            @map("patient_age")
+  patientGender           String         @map("patient_gender")
+  originalFileUrl         String?        @map("original_file_url")
+  originalFileType        String         @map("original_file_type") // PDF, PNG, JPG
+  originalFileName        String         @map("original_file_name")
+  pdfUrl                  String?        @map("pdf_url")
+  fileSize                Int            @map("file_size") // in bytes
+  createdAt               DateTime       @default(now()) @map("created_at")
+  updatedAt               DateTime       @updatedAt @map("updated_at")
+  user                    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prescription            Prescription?
+  labReport               LabReport?
+  sharedInstances         SharedRecord[] // Instances where this record has been shared
+
+  @@map("health_records")
+}
+
+model Prescription {
+  id               String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  healthRecordId   String               @unique @map("health_record_id") @db.Uuid
+  prescriptionType String               @map("prescription_type")
+  diagnosis        String
+  symptoms         String[]
+  doctorAdvice     String?              @map("doctor_advice")
+  followUpDate     DateTime?            @map("follow_up_date")
+  healthRecord     HealthRecord         @relation(fields: [healthRecordId], references: [id], onDelete: Cascade)
+  medicines        PrescribedMedicine[]
+  labTests         LabTest[]
+
+  @@map("prescriptions")
+}
+
+model PrescribedMedicine {
+  id                  String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  prescriptionId      String       @map("prescription_id") @db.Uuid
+  medicineName        String       @map("medicine_name")
+  dosage              String
+  frequency           String
+  instructions        String
+  duration            Int
+  chemicalComposition String       @map("chemical_composition")
+  timeSlot            Json         @default("[]")
+  form                String       @default("tablet")
+  prescription        Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+
+  @@map("prescribed_medicines")
+}
+
+model LabTest {
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  prescriptionId  String       @map("prescription_id") @db.Uuid
+  testName        String       @map("test_name")
+  testDescription String       @map("test_description")
+  bookTestUrl     String?      @map("book_test_url")
+  prescription    Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+
+  @@map("lab_tests")
+}
+
+model LabReport {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  healthRecordId String       @unique @map("health_record_id") @db.Uuid
+  pathologyName  String       @map("pathology_name")
+  testName       String       @map("test_name")
+  healthRecord   HealthRecord @relation(fields: [healthRecordId], references: [id], onDelete: Cascade)
+
+  @@map("lab_reports")
+}
+
+model SharedRecord {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  healthRecordId String   @map("health_record_id") @db.Uuid
+  sharedById     String   @map("shared_by_id") @db.Uuid // User who shared the record
+  recipientEmail String   @map("recipient_email") // Email of the person it was shared with
+  sharedAt       DateTime @default(now()) @map("shared_at")
+
+  healthRecord HealthRecord @relation(fields: [healthRecordId], references: [id], onDelete: Cascade)
+  sharedBy     User         @relation("SharedBy", fields: [sharedById], references: [id], onDelete: Cascade)
+  // We don't link directly to a recipient User model here, as the recipient might not be a registered user yet.
+  // We'll query based on recipientEmail matching the logged-in user's email.
+
+  @@unique([healthRecordId, recipientEmail]) // Prevent sharing the same record multiple times to the same email
+  @@map("shared_records")
+}

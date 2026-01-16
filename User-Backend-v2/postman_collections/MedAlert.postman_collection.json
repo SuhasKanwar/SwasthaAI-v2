@@ -1,0 +1,436 @@
+{
+  "info": {
+    "_postman_id": "e3a76f9c-5c40-4e1b-bcef-c7e12a6c0234",
+    "name": "Swastha MedAlert",
+    "description": "API endpoints for the MedAlert system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "12345678"
+  },
+  "item": [
+    {
+      "name": "MedAlert Settings",
+      "item": [
+        {
+          "name": "Get MedAlert Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/medalert/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "medalert", "settings"]
+            },
+            "description": "Get current MedAlert settings for the authenticated user"
+          },
+          "response": []
+        },
+        {
+          "name": "Update MedAlert Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"autoReminder\": true,\n    \"notifyEmail\": true,\n    \"notifyPush\": true,\n    \"notifySms\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/medalert/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "medalert", "settings"]
+            },
+            "description": "Update MedAlert settings for the authenticated user"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for MedAlert Settings"
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/medalert/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "medalert", "categories"]
+            },
+            "description": "Get all medicine categories for the authenticated user"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Heart Medication\",\n    \"description\": \"All medications related to heart conditions\",\n    \"color\": \"#FF5733\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/medalert/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "medalert", "categories"]
+            },
+            "description": "Create a new medication category"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Cardiac Medication\",\n    \"description\": \"All medications related to heart and cardiac conditions\",\n    \"color\": \"#FF0000\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/medalert/categories/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "medalert", "categories", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{category_id}}",
+                  "description": "Category ID"
+                }
+              ]
+            },
+            "description": "Update an existing medication category"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/medalert/categories/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "medalert", "categories", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{category_id}}",
+                  "description": "Category ID"
+                }
+              ]
+            },
+            "description": "Delete a medication category"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for MedAlert Categories"
+    },
+    {
+      "name": "Reminders",
+      "item": [
+        {
+          "name": "Get All Reminders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/medalert/reminders",
+              "host": ["{{base_url}}"],
+              "path": ["api", "medalert", "reminders"]
+            },
+            "description": "Get all medication reminders for the authenticated user"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reminder By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/medalert/reminders/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "medalert", "reminders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{reminder_id}}",
+                  "description": "Reminder ID"
+                }
+              ]
+            },
+            "description": "Get medication reminder details by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Reminder",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"categoryId\": \"{{category_id}}\",\n    \"medicineName\": \"Aspirin\",\n    \"dosage\": \"100mg\",\n    \"frequency\": \"Once daily\",\n    \"startDate\": \"2023-06-01\",\n    \"endDate\": \"2023-07-01\",\n    \"notes\": \"Take with food\",\n    \"form\": \"tablet\",\n    \"timeSlot\": [\n        {\n            \"hour\": \"09\",\n            \"minute\": \"00\",\n            \"period\": \"AM\"\n        }\n    ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/medalert/reminders",
+              "host": ["{{base_url}}"],
+              "path": ["api", "medalert", "reminders"]
+            },
+            "description": "Create a new medication reminder. File upload is not supported via raw JSON."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Reminder",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"medicineName\": \"Aspirin\",\n    \"dosage\": \"200mg\",\n    \"frequency\": \"Twice daily\",\n    \"startDate\": \"2023-06-01\",\n    \"endDate\": \"2023-08-01\",\n    \"notes\": \"Take with water\",\n    \"form\": \"capsule\",\n    \"timeSlot\": [\n        {\n            \"hour\": \"08\",\n            \"minute\": \"00\",\n            \"period\": \"AM\"\n        },\n        {\n            \"hour\": \"08\",\n            \"minute\": \"00\",\n            \"period\": \"PM\"\n        }\n    ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/medalert/reminders/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "medalert", "reminders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{reminder_id}}",
+                  "description": "Reminder ID"
+                }
+              ]
+            },
+            "description": "Update an existing medication reminder. No file upload supported in update."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Reminder",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/medalert/reminders/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "medalert", "reminders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{reminder_id}}",
+                  "description": "Reminder ID"
+                }
+              ]
+            },
+            "description": "Delete a medication reminder"
+          },
+          "response": []
+        },
+        {
+          "name": "Pause Reminder",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/medalert/reminders/:id/pause",
+              "host": ["{{base_url}}"],
+              "path": ["api", "medalert", "reminders", ":id", "pause"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{reminder_id}}",
+                  "description": "Reminder ID"
+                }
+              ]
+            },
+            "description": "Pause/unpause a medication reminder"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for MedAlert Reminders"
+    },
+    {
+      "name": "Suggested Reminders",
+      "item": [
+        {
+          "name": "Get Suggested Reminders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/medalert/suggested",
+              "host": ["{{base_url}}"],
+              "path": ["api", "medalert", "suggested"]
+            },
+            "description": "Get suggested medication reminders for the authenticated user (e.g., from Health Vault prescriptions)"
+          },
+          "response": []
+        },
+        {
+          "name": "Activate Suggested Reminder",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/medalert/suggested/:id/activate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "medalert", "suggested", ":id", "activate"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{suggested_reminder_id}}",
+                  "description": "Suggested Reminder ID"
+                }
+              ]
+            },
+            "description": "Activate a suggested reminder, making it a regular reminder"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for Suggested MedAlert Reminders"
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "category_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reminder_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "suggested_reminder_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

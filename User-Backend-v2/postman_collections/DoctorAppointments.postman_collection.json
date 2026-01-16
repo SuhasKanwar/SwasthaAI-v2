@@ -1,0 +1,138 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6",
+    "name": "Doctor Appointments",
+    "description": "API endpoints for doctor's appointment management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Doctor's Appointments",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/doctors/:doctorId/appointments?status=Pending&page=1&limit=10",
+          "host": ["{{base_url}}"],
+          "path": ["api", "doctors", ":doctorId", "appointments"],
+          "query": [
+            {
+              "key": "status",
+              "value": "Pending",
+              "description": "Filter by status: Pending, Confirmed, Rejected, Cancelled, Completed"
+            },
+            {
+              "key": "from",
+              "value": "2024-03-01",
+              "description": "Filter by date range start",
+              "disabled": true
+            },
+            {
+              "key": "to",
+              "value": "2024-03-31",
+              "description": "Filter by date range end",
+              "disabled": true
+            },
+            {
+              "key": "page",
+              "value": "1",
+              "description": "Page number for pagination"
+            },
+            {
+              "key": "limit",
+              "value": "10",
+              "description": "Number of results per page"
+            }
+          ],
+          "variable": [
+            {
+              "key": "doctorId",
+              "value": "{{doctor_id}}",
+              "description": "UUID of the doctor"
+            }
+          ]
+        },
+        "description": "Get all appointments for a specific doctor with filters"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Single Appointment",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/doctors/:doctorId/appointments/:appointmentId",
+          "host": ["{{base_url}}"],
+          "path": ["api", "doctors", ":doctorId", "appointments", ":appointmentId"],
+          "variable": [
+            {
+              "key": "doctorId",
+              "value": "{{doctor_id}}",
+              "description": "UUID of the doctor"
+            },
+            {
+              "key": "appointmentId",
+              "value": "{{appointment_id}}",
+              "description": "ID of the appointment"
+            }
+          ]
+        },
+        "description": "Get details of a specific appointment"
+      },
+      "response": []
+    },
+    {
+      "name": "Update Appointment Status",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"appointmentStatus\": \"Confirmed\",\n    \"confirmationMessage\": \"Looking forward to seeing you!\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/doctors/:doctorId/appointments/:appointmentId",
+          "host": ["{{base_url}}"],
+          "path": ["api", "doctors", ":doctorId", "appointments", ":appointmentId"],
+          "variable": [
+            {
+              "key": "doctorId",
+              "value": "{{doctor_id}}",
+              "description": "UUID of the doctor"
+            },
+            {
+              "key": "appointmentId",
+              "value": "{{appointment_id}}",
+              "description": "ID of the appointment"
+            }
+          ]
+        },
+        "description": "Update the status of an appointment (confirm/reject/complete/cancel)"
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "doctor_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "appointment_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+} 

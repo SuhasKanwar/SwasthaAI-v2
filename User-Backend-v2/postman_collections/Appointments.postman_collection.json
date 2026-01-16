@@ -1,0 +1,279 @@
+{
+  "info": {
+    "_postman_id": "t2u3v4w5-x6y7-8z9a-b1c2-d3e4f5g6h7i8",
+    "name": "Swastha Appointments",
+    "description": "API endpoints for appointment scheduling, management, and history",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "12345678"
+  },
+  "item": [
+    {
+      "name": "Appointment Management",
+      "item": [
+        {
+          "name": "Create Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "doctorId",
+                  "value": "{{doctor_id}}",
+                  "type": "text",
+                  "description": "UUID of the doctor"
+                },
+                {
+                  "key": "clinicId",
+                  "value": "{{clinic_id}}",
+                  "type": "text",
+                  "description": "(Optional) UUID of the specific clinic. If omitted, the doctor's first available clinic will be used."
+                },
+                {
+                  "key": "appointmentDate",
+                  "value": "2025-04-15",
+                  "type": "text",
+                  "description": "Date of appointment (YYYY-MM-DD)"
+                },
+                {
+                  "key": "appointmentSlot",
+                  "value": "10:30",
+                  "type": "text",
+                  "description": "Time slot (e.g., HH:MM)"
+                },
+                {
+                  "key": "symptomsEntered",
+                  "value": "Feeling tired, slight cough",
+                  "type": "text",
+                  "description": "(Optional) User entered symptoms"
+                },
+                {
+                  "key": "patientName",
+                  "value": "Test Patient",
+                  "type": "text",
+                  "description": "Name of the patient for the appointment"
+                },
+                {
+                  "key": "patientContact",
+                  "value": "9876543210",
+                  "type": "text",
+                  "description": "Contact number for the patient"
+                },
+                {
+                  "key": "addressType",
+                  "value": "saved",
+                  "type": "text",
+                  "description": "'saved' or 'new'"
+                },
+                {
+                  "key": "payOnConsultation",
+                  "value": "false",
+                  "type": "text",
+                  "description": "Boolean (true/false) if paying later"
+                },
+                {
+                  "key": "documents",
+                  "type": "file",
+                  "description": "(Optional) Upload medical documents",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/appointments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "appointments"
+              ]
+            },
+            "description": "Schedule a new appointment with a doctor"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Appointment By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/appointments/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{appointment_id}}",
+                  "description": "Appointment ID"
+                }
+              ]
+            },
+            "description": "Get details of a specific appointment"
+          },
+          "response": []
+        },
+        {
+          "name": "Reschedule Appointment",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"appointmentDate\": \"2025-04-16\",\n    \"appointmentSlot\": \"14:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/appointments/:id/reschedule",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                ":id",
+                "reschedule"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{appointment_id}}",
+                  "description": "Appointment ID to reschedule"
+                }
+              ]
+            },
+            "description": "Reschedule an existing appointment to a new date and time slot."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Appointments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/appointments?status=Pending&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "appointments"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Pending",
+                  "description": "Filter by status: Pending, Confirmed, Cancelled, etc."
+                },
+                {
+                  "key": "from",
+                  "value": "2023-06-01",
+                  "description": "Filter by date range start",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "2023-06-30",
+                  "description": "Filter by date range end",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of results per page"
+                }
+              ]
+            },
+            "description": "Get all appointments for the current authenticated user"
+          },
+          "response": []
+        }
+      ],
+      "description": "Create, view, and update appointments"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "appointment_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "doctor_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

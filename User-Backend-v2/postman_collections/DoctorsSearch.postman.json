@@ -1,0 +1,243 @@
+{
+    "info": {
+      "_postman_id": "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6",
+      "name": "Swastha Doctors",
+      "description": "API endpoints for doctor search, profiles, and availability",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "_exporter_id": "12345678"
+    },
+    "item": [
+      {
+        "name": "Search Doctors",
+        "item": [
+          {
+            "name": "Search Doctors by Criteria",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{access_token}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/api/doctors/search?specialty=cardiology&name=smith&languages=english,spanish&page=1&limit=10",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "api",
+                  "doctors",
+                  "search"
+                ],
+                "query": [
+                  {
+                    "key": "specialty",
+                    "value": "cardiology",
+                    "description": "Medical specialty"
+                  },
+                  {
+                    "key": "name",
+                    "value": "smith",
+                    "description": "Doctor's name"
+                  },
+                  {
+                    "key": "languages",
+                    "value": "english,spanish",
+                    "description": "Languages spoken (comma separated)"
+                  },
+                  {
+                    "key": "lat",
+                    "value": "40.7128",
+                    "description": "Latitude for location search",
+                    "disabled": true
+                  },
+                  {
+                    "key": "lng",
+                    "value": "-74.0060",
+                    "description": "Longitude for location search",
+                    "disabled": true
+                  },
+                  {
+                    "key": "page",
+                    "value": "1",
+                    "description": "Page number for pagination"
+                  },
+                  {
+                    "key": "limit",
+                    "value": "10",
+                    "description": "Number of results per page"
+                  }
+                ]
+              },
+              "description": "Search for doctors based on multiple criteria. Response includes doctor profiles with basic info, email, verification status, clinics, and calculated score (if location provided)."
+            },
+            "response": []
+          },
+          {
+            "name": "Get Nearby Doctors",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{access_token}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/api/doctors/nearby?lat=40.7128&lng=-74.0060&limit=10",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "api",
+                  "doctors",
+                  "nearby"
+                ],
+                "query": [
+                  {
+                    "key": "lat",
+                    "value": "40.7128",
+                    "description": "User's current latitude"
+                  },
+                  {
+                    "key": "lng",
+                    "value": "-74.0060",
+                    "description": "User's current longitude"
+                  },
+                  {
+                    "key": "limit",
+                    "value": "10",
+                    "description": "Number of results"
+                  }
+                ]
+              },
+              "description": "Get doctors near a geographical location. Response includes doctor profiles with basic info, email, verification status, clinics, and calculated score. Currently uses rating for score and orders by it."
+            },
+            "response": []
+          }
+        ],
+        "description": "Search endpoints for finding doctors"
+      },
+      {
+        "name": "Doctor Profiles",
+        "item": [
+          {
+            "name": "Get Doctor By ID",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{access_token}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/api/doctors/:id",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "api",
+                  "doctors",
+                  ":id"
+                ],
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "{{doctor_id}}",
+                    "description": "Doctor ID"
+                  }
+                ]
+              },
+              "description": "Get detailed information about a specific doctor, including profile data, email, verification status, clinics, recent reviews (up to 10), and FAQs."
+            },
+            "response": []
+          },
+          {
+            "name": "Get Doctor Availability",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{access_token}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/api/doctors/:id/availability?date=2023-06-15",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "api",
+                  "doctors",
+                  ":id",
+                  "availability"
+                ],
+                "query": [
+                  {
+                    "key": "date",
+                    "value": "2023-06-15",
+                    "description": "Date for availability check (YYYY-MM-DD)"
+                  }
+                ],
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "{{doctor_id}}",
+                    "description": "Doctor ID"
+                  }
+                ]
+              },
+              "description": "Get available appointment slots for a specific doctor on a given date"
+            },
+            "response": []
+          }
+        ],
+        "description": "Doctor profile endpoints"
+      }
+    ],
+    "event": [
+      {
+        "listen": "prerequest",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            ""
+          ]
+        }
+      },
+      {
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            ""
+          ]
+        }
+      }
+    ],
+    "variable": [
+      {
+        "key": "base_url",
+        "value": "http://localhost:3000",
+        "type": "string"
+      },
+      {
+        "key": "access_token",
+        "value": "",
+        "type": "string"
+      },
+      {
+        "key": "doctor_id",
+        "value": "",
+        "type": "string"
+      }
+    ]
+  }
+  

@@ -1,0 +1,428 @@
+{
+  "info": {
+    "name": "Health Vault API",
+    "description": "Collection for testing Health Vault endpoints under /api/physical-health/health-vault",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "List Health Records",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/physical-health/health-vault?recordType=PRESCRIPTION&healthType=PHYSICAL&status=UHP&page=1&limit=10&sortBy=date&sortOrder=desc",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "physical-health", "health-vault"],
+          "query": [
+            {
+              "key": "recordType",
+              "value": "PRESCRIPTION",
+              "description": "PRESCRIPTION or LAB_REPORT"
+            },
+            {
+              "key": "healthType",
+              "value": "PHYSICAL",
+              "description": "PHYSICAL or MENTAL"
+            },
+            {
+              "key": "status",
+              "value": "UHP",
+              "description": "UHP or UPLOADED"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            },
+            {
+              "key": "sortBy",
+              "value": "date"
+            },
+            {
+              "key": "sortOrder",
+              "value": "desc"
+            }
+          ]
+        },
+        "description": "Get all health records with filtering options"
+      }
+    },
+    {
+      "name": "Upload PDF Record",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "",
+              "description": "PDF file to upload (max 5MB)"
+            },
+            {
+              "key": "record_type",
+              "value": "PRESCRIPTION",
+              "description": "Enter as plain text without quotes: PRESCRIPTION or LAB_REPORT",
+              "type": "text"
+            },
+            {
+              "key": "date",
+              "value": "2025-03-30T15:30:00.000Z",
+              "description": "Date and time in ISO format",
+              "type": "text"
+            },
+            {
+              "key": "doctor_name",
+              "value": "Dr. John Doe",
+              "description": "Name of the doctor",
+              "type": "text"
+            },
+            {
+              "key": "status",
+              "value": "UPLOADED",
+              "description": "Enter as plain text without quotes: UPLOADED",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/physical-health/health-vault",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "physical-health", "health-vault"]
+        },
+        "description": "Upload a PDF record (prescription or lab report). IMPORTANT: For record_type and status fields, enter values as plain text without quotes (e.g., PRESCRIPTION not \"PRESCRIPTION\"). File size limit: 5MB"
+      }
+    },
+    {
+      "name": "Create UHP Prescription",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+            "raw": "{\n    \"record_type\": \"PRESCRIPTION\",\n    \"date\": \"2025-03-30T15:30:00.000Z\",\n    \"doctor_name\": \"Dr. John Doe\",\n    \"doctor_registration_no\": \"MCI/123456\",\n    \"doctor_specialization\": \"Cardiology\",\n    \"doctor_profile_picture_url\": \"https://example.com/doctor.jpg\",\n    \"hospital_clinic_name\": \"City Hospital\",\n    \"hospital_clinic_address\": \"123 Medical Center Blvd, City, State 12345\",\n    \"hospital_clinic_logo_url\": \"https://example.com/hospital_logo.png\",\n    \"status\": \"UHP\",\n    \"patient_id\": \"PAT123\",\n    \"patient_name\": \"John Smith\",\n    \"patient_age\": 45,\n    \"patient_gender\": \"MALE\",\n    \"notes\": \"First visit for hypertension\",\n    \"shared\": false,\n    \"prescription_type\": \"UHP\",\n    \"diagnosis\": \"Hypertension\",\n    \"symptoms\": [\"Headache\", \"Dizziness\"],\n    \"doctor_advice\": \"Reduce salt intake and exercise regularly\",\n    \"follow_up_date\": \"2025-04-15T10:00:00.000Z\",\n    \"medicines\": [\n        {\n            \"medicine_name\": \"Amlodipine\",\n            \"dosage\": \"5mg\",\n            \"frequency\": \"Once daily\",\n            \"instructions\": \"AFTER_MEAL\",\n            \"duration\": 30,\n            \"chemical_composition\": \"Amlodipine Besylate\",\n            \"time_slot\": [\n                {\n                    \"hour\": \"09\",\n                    \"minute\": \"00\",\n                    \"period\": \"AM\"\n                }\n            ],\n            \"form\": \"tablet\"\n        }\n    ],\n    \"lab_tests\": [\n        {\n            \"test_name\": \"Complete Blood Count\",\n            \"test_description\": \"To check blood cell counts\",\n            \"book_test_url\": \"https://example.com/book-test/cbc\"\n        }\n    ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/physical-health/health-vault",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "physical-health", "health-vault"]
+        },
+        "description": "Create a new UHP (Unified Health Prescription) record"
+      }
+    },
+    {
+      "name": "Create Lab Report",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"record_type\": \"LAB_REPORT\",\n    \"date\": \"2025-03-30T15:30:00.000Z\",\n    \"doctor_name\": \"Dr. Jane Smith\",\n    \"doctor_registration_no\": \"MCI/789012\",\n    \"doctor_specialization\": \"Pathology\",\n    \"doctor_profile_picture_url\": \"https://example.com/pathologist.jpg\",\n    \"hospital_clinic_name\": \"City Labs\",\n    \"hospital_clinic_logo_url\": \"https://example.com/lab_logo.png\",\n    \"status\": \"UHP\",\n    \"patient_id\": \"PAT123\",\n    \"patient_name\": \"John Smith\",\n    \"patient_age\": 45,\n    \"patient_gender\": \"MALE\",\n    \"pathology_name\": \"City Labs\",\n    \"test_name\": \"Complete Blood Count\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/physical-health/health-vault",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "physical-health", "health-vault"]
+        },
+        "description": "Create a new Lab Report record"
+      }
+    },
+    {
+      "name": "Get Record By ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/physical-health/health-vault/:recordId",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "physical-health", "health-vault", ":recordId"],
+          "variable": [
+            {
+              "key": "recordId",
+              "value": "",
+              "description": "ID of the health record"
+            }
+          ]
+        },
+        "description": "Get a specific health record by ID. Returns full details for UHP records, or PDF URL for uploaded records."
+      }
+    },
+    {
+      "name": "Get Records Shared With Me",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/physical-health/health-vault/shared-with-me",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "physical-health", "health-vault", "shared-with-me"]
+        },
+        "description": "Get a list of health records that have been shared with the currently logged-in user."
+      }
+    },
+    {
+      "name": "Update Record Notes",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"notes\": \"Need to schedule follow-up appointment\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/physical-health/health-vault/:recordId/notes",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "physical-health", "health-vault", ":recordId", "notes"],
+          "variable": [
+            {
+              "key": "recordId",
+              "value": "",
+              "description": "ID of the health record"
+            }
+          ]
+        },
+        "description": "Add or update notes for a health record"
+      }
+    },
+    {
+      "name": "Share Record",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"share_method\": \"EMAIL\",\n    \"recipient\": \"doctor@example.com\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/physical-health/health-vault/:recordId/share",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "physical-health", "health-vault", ":recordId", "share"],
+          "variable": [
+            {
+              "key": "recordId",
+              "value": "",
+              "description": "ID of the health record"
+            }
+          ]
+        },
+        "description": "Share a health record via email, WhatsApp, or message"
+      }
+    },
+    {
+      "name": "Delete Record",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/physical-health/health-vault/:recordId",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "physical-health", "health-vault", ":recordId"],
+          "variable": [
+            {
+              "key": "recordId",
+              "value": "",
+              "description": "ID of the health record"
+            }
+          ]
+        },
+        "description": "Delete a health record. Only uploaded records can be deleted."
+      }
+    },
+    {
+      "name": "Download Record",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/physical-health/health-vault/:recordId/download",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "physical-health", "health-vault", ":recordId", "download"],
+          "variable": [
+            {
+              "key": "recordId",
+              "value": "",
+              "description": "ID of the health record"
+            }
+          ]
+        },
+        "description": "Download the health record as PDF"
+      }
+    },
+    {
+      "name": "Get AI Insights",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/physical-health/health-vault/:recordId/ai-insights",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "physical-health", "health-vault", ":recordId", "ai-insights"],
+          "variable": [
+            {
+              "key": "recordId",
+              "value": "",
+              "description": "ID of the lab report"
+            }
+          ]
+        },
+        "description": "Get AI-generated insights for a lab report"
+      }
+    },
+    {
+      "name": "Create MedAlert",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"medicineIds\": [\"med-id-1\", \"med-id-2\"]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/physical-health/health-vault/:recordId/med-alert",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "physical-health", "health-vault", ":recordId", "med-alert"],
+          "variable": [
+            {
+              "key": "recordId",
+              "value": "",
+              "description": "ID of the prescription"
+            }
+          ]
+        },
+        "description": "Create medication alerts from a prescription for selected medicines. Provide an array of medicine IDs from the prescription to create reminders for specific medicines only. The reminders will be created as 'suggested' and can be activated later through the MedAlert interface."
+      }
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImRiYjhjMGVlLWI4YjQtNDU4ZS1iNTI5LTIwZjdjMmI0MTM1NiIsImVtYWlsIjoicHJhdHlha3Noc2lyc2FAZ21haWwuY29tIiwidHlwZSI6InVzZXIiLCJpYXQiOjE3NDU3NTI3NzUsImV4cCI6MTc0NTc1NjM3NX0.3myIcMJsfbwaCc94ng-3N0Abv-zGtLTsRbsNabRjYlk",
+      "type": "string",
+      "description": "JWT token format: Make sure to use a valid JWT token without any special characters in the payload"
+    }
+  ]
+}

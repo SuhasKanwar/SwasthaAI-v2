@@ -1,0 +1,394 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Doctors",
+    "description": "Collection for testing doctor-related endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Doctor Management",
+      "item": [
+        {
+          "name": "Create Doctor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"doctor@example.com\",\n    \"password\": \"securepassword123\",\n    \"securityPin\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors"]
+            },
+            "description": "Create a new doctor account"
+          }
+        },
+        {
+          "name": "Get All Doctors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors?skip=0&take=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors"],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "take",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get a paginated list of all doctors"
+          }
+        },
+        {
+          "name": "Search Doctors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/search?query=cardiology&skip=0&take=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", "search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "cardiology"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "take",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Search doctors by name or specialty"
+          }
+        },
+        {
+          "name": "Get Doctor by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "doctor-uuid-here"
+                }
+              ]
+            },
+            "description": "Get a specific doctor's details"
+          }
+        },
+        {
+          "name": "Update Doctor",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"updated@example.com\",\n    \"isVerified\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "doctor-uuid-here"
+                }
+              ]
+            },
+            "description": "Update a doctor's information"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doctor Profile",
+      "item": [
+        {
+          "name": "Create Doctor Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"displayName\": \"Dr. John Doe\",\n    \"profilePicture\": \"https://example.com/profile.jpg\",\n    \"specialty\": \"Cardiology\",\n    \"expertiseAreas\": [\"Heart Disease\", \"Hypertension\"],\n    \"bio\": \"Experienced cardiologist with 15 years of practice\",\n    \"yearsOfExperience\": 15,\n    \"degree\": \"MD\",\n    \"college\": \"Harvard Medical School\",\n    \"certifications\": [\"Board Certified Cardiologist\"],\n    \"medicalRegistrationNumber\": \"MD123456\",\n    \"languagesSpoken\": [\"English\", \"Spanish\"],\n    \"consultationFees\": 150,\n    \"payOnConsultation\": true,\n    \"providesOnlineConsultation\": true,\n    \"genderPreference\": \"both\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/:doctorId/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", ":doctorId", "profile"],
+              "variable": [
+                {
+                  "key": "doctorId",
+                  "value": "doctor-uuid-here"
+                }
+              ]
+            },
+            "description": "Create a doctor's profile"
+          }
+        },
+        {
+          "name": "Update Doctor Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"bio\": \"Updated bio with more experience\",\n    \"consultationFees\": 200\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/:doctorId/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", ":doctorId", "profile"],
+              "variable": [
+                {
+                  "key": "doctorId",
+                  "value": "doctor-uuid-here"
+                }
+              ]
+            },
+            "description": "Update a doctor's profile information"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Clinics",
+      "item": [
+        {
+          "name": "Add Clinic",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Main Clinic\",\n    \"address\": \"123 Medical Center Dr\",\n    \"googleMapsLink\": \"https://maps.google.com/...\",\n    \"availabilityDates\": [\"2024-03-20\", \"2024-03-21\"],\n    \"availabilitySlots\": {\n        \"2024-03-20\": [\"09:00\", \"10:00\", \"11:00\"],\n        \"2024-03-21\": [\"14:00\", \"15:00\", \"16:00\"]\n    }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/:doctorId/clinics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", ":doctorId", "clinics"],
+              "variable": [
+                {
+                  "key": "doctorId",
+                  "value": "doctor-uuid-here"
+                }
+              ]
+            },
+            "description": "Add a new clinic for a doctor"
+          }
+        },
+        {
+          "name": "Update Clinic",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Updated Clinic Name\",\n    \"availabilityDates\": [\"2024-03-22\", \"2024-03-23\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/clinics/:clinicId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", "clinics", ":clinicId"],
+              "variable": [
+                {
+                  "key": "clinicId",
+                  "value": "clinic-uuid-here"
+                }
+              ]
+            },
+            "description": "Update a clinic's information"
+          }
+        },
+        {
+          "name": "Delete Clinic",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/clinics/:clinicId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", "clinics", ":clinicId"],
+              "variable": [
+                {
+                  "key": "clinicId",
+                  "value": "clinic-uuid-here"
+                }
+              ]
+            },
+            "description": "Delete a clinic"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Add Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"userId\": \"user-uuid-here\",\n    \"userName\": \"John Smith\",\n    \"rating\": 5,\n    \"reviewText\": \"Excellent doctor, very professional and knowledgeable.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/:doctorId/reviews",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", ":doctorId", "reviews"],
+              "variable": [
+                {
+                  "key": "doctorId",
+                  "value": "doctor-uuid-here"
+                }
+              ]
+            },
+            "description": "Add a review for a doctor"
+          }
+        }
+      ]
+    },
+    {
+      "name": "FAQs",
+      "item": [
+        {
+          "name": "Add FAQ",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"question\": \"What are your consultation hours?\",\n    \"answer\": \"I am available Monday to Friday, 9 AM to 5 PM.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/:doctorId/faqs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", ":doctorId", "faqs"],
+              "variable": [
+                {
+                  "key": "doctorId",
+                  "value": "doctor-uuid-here"
+                }
+              ]
+            },
+            "description": "Add a FAQ for a doctor"
+          }
+        },
+        {
+          "name": "Update FAQ",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"answer\": \"Updated answer with new consultation hours.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/faqs/:faqId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", "faqs", ":faqId"],
+              "variable": [
+                {
+                  "key": "faqId",
+                  "value": "faq-uuid-here"
+                }
+              ]
+            },
+            "description": "Update a FAQ"
+          }
+        },
+        {
+          "name": "Delete FAQ",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/faqs/:faqId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", "faqs", ":faqId"],
+              "variable": [
+                {
+                  "key": "faqId",
+                  "value": "faq-uuid-here"
+                }
+              ]
+            },
+            "description": "Delete a FAQ"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ]
+}

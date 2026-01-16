@@ -1,0 +1,152 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+    "name": "Swastha Feedback",
+    "description": "Endpoints for submitting and retrieving user feedback.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "12345678"
+  },
+  "item": [
+    {
+      "name": "Get Feedbacks",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/physical-health/feedback?page=1&limit=10&status=Pending",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "physical-health",
+            "feedback"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1",
+              "description": "(Optional) Page number for pagination"
+            },
+            {
+              "key": "limit",
+              "value": "10",
+              "description": "(Optional) Number of items per page"
+            },
+            {
+              "key": "status",
+              "value": "Pending",
+              "description": "(Optional) Filter by status (Pending, Resolved, Closed)"
+            }
+          ]
+        },
+        "description": "Get a list of feedback submitted by the user. Supports pagination and filtering by status."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Feedback By ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/physical-health/feedback/{{feedback_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "physical-health",
+            "feedback",
+            "{{feedback_id}}"
+          ]
+        },
+        "description": "Get a specific feedback entry by its ID. Set the `feedback_id` variable."
+      },
+      "response": []
+    },
+    {
+      "name": "Create Feedback",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "category",
+              "value": "Bug Report",
+              "type": "text",
+              "description": "Type of feedback (Bug Report, Feature Request, General Inquiry, Complaint)"
+            },
+            {
+              "key": "subject",
+              "value": "Issue with login",
+              "type": "text",
+              "description": "Subject of the feedback"
+            },
+            {
+              "key": "message",
+              "value": "I cannot log in to my account.",
+              "type": "text",
+              "description": "Detailed description of the feedback"
+            },
+            {
+              "key": "file",
+              "type": "file",
+              "description": "(Optional) Attach a file (e.g., screenshot)"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/physical-health/feedback",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "physical-health",
+            "feedback"
+          ]
+        },
+        "description": "Submit new feedback. Includes fields for category, subject, message, and an optional file attachment."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "feedback_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

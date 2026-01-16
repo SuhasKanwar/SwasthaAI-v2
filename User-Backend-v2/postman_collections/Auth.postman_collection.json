@@ -1,0 +1,298 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-4a5b-9c8d-7e6f5a4b3c2d",
+    "name": "Swastha Authentication",
+    "description": "API endpoints for user authentication, registration, and account management. Features OTP-based authentication with optional security PIN setup.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "12345678"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Request OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/request-otp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "request-otp"]
+            },
+            "description": "Request an OTP for email verification. For new users, creates a minimal account. Returns isNewUser flag to indicate if a new account was created."
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Email OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\",\n    \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "verify-otp"]
+            },
+            "description": "Verify email during registration. After verification, proceed to setup-pin endpoint for new users."
+          },
+          "response": []
+        },
+        {
+          "name": "Setup Security PIN (New Users)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.token) {",
+                  "    pm.environment.set('access_token', response.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\",\n    \"securityPin\": \"123456\",\n    \"confirmPin\": \"123456\",\n    \"isNewUser\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/setup-pin",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "setup-pin"]
+            },
+            "description": "Set initial security PIN for new users only. Requires isNewUser=true and matching PIN confirmation. Returns authentication token for immediate profile updates."
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login with email. Response includes hasSecurityPin flag and sends OTP immediately for verification."
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Login OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.token) {",
+                  "    pm.environment.set('access_token', response.token);",
+                  "    pm.environment.set('expired_token', response.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\",\n    \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-login-otp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "verify-login-otp"]
+            },
+            "description": "Verify OTP during login. If user has security PIN, returns token. If no security PIN, redirects to setup-pin."
+          },
+          "response": []
+        }
+      ],
+      "description": "Core authentication endpoints for login and security PIN setup"
+    },
+    {
+      "name": "Profile Management",
+      "item": [
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"gender\": \"Male\",\n    \"phoneNumber\": \"+1234567890\",\n    \"defaultHomeScreen\": \"Mental Health\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/physical-health/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "physical-health", "user", "profile"]
+            },
+            "description": "Update user profile information. Requires authentication token."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Profile Photo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "photo",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/physical-health/user/profile/photo",
+              "host": ["{{base_url}}"],
+              "path": ["api", "physical-health", "user", "profile", "photo"]
+            },
+            "description": "Upload or update profile photo. Maximum size: 5MB. Image files only."
+          },
+          "response": []
+        }
+      ],
+      "description": "Profile management endpoints requiring authentication"
+    },
+    {
+      "name": "Token Management",
+      "item": [
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"expiredToken\": \"{{expired_token}}\",\n    \"securityPin\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh-token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "refresh-token"]
+            },
+            "description": "Get new token using expired token and security PIN. Uses expired token for user identification."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Log out user and invalidate current session."
+          },
+          "response": []
+        }
+      ],
+      "description": "Token refresh and session management endpoints"
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "expired_token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

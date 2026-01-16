@@ -1,0 +1,684 @@
+{
+  "info": {
+    "_postman_id": "b87c5d63-1592-4f03-9c81-7e69283f5a91",
+    "name": "Swastha User Profile",
+    "description": "User profiles, medical profiles, addresses and feedback endpoints. All responses include completedProfile status flag.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "12345678"
+  },
+  "item": [
+    {
+      "name": "User Profile",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "profile"
+              ]
+            },
+            "description": "Get current user's profile information. Response includes completedProfile flag indicating if required fields are filled."
+          },
+          "response": [
+            {
+              "name": "Example Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": []
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"id\": \"user-uuid\",\n        \"email\": \"user@example.com\",\n        \"firstName\": \"John\",\n        \"lastName\": \"Doe\",\n        \"dateOfBirth\": \"1990-01-01\",\n        \"gender\": \"Male\",\n        \"phoneNumber\": \"1234567890\",\n        \"countryCode\": \"+1\",\n        \"completedProfile\": true\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Basic Info",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"gender\": \"Male\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/profile/basic-info",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "profile",
+                "basic-info"
+              ]
+            },
+            "description": "Update basic user information. Required fields: firstName, lastName, dateOfBirth, gender."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Contact Info",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\",\n    \"phoneNumber\": \"1234567890\",\n    \"countryCode\": \"+1\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/profile/contact-info",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "profile",
+                "contact-info"
+              ]
+            },
+            "description": "Update contact information. Email must be verified through OTP verification."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"defaultHomeScreen\": \"Mental Health\",\n    \"languages\": [\"English\", \"Spanish\"],\n    \"ethnicity\": \"Asian\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/profile/preferences",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "profile",
+                "preferences"
+              ]
+            },
+            "description": "Update user preferences. All fields are optional."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Profile Photo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "photo",
+                  "type": "file",
+                  "src": "",
+                  "description": "Profile photo file (max 5MB)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/profile/photo",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "profile",
+                "photo"
+              ]
+            },
+            "description": "Upload or update profile photo. Max size: 5MB. Supported formats: jpg, jpeg, png"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Profile Photo",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/profile/photo",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "profile",
+                "photo"
+              ]
+            },
+            "description": "Delete the user's profile photo"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Email Change",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"newEmail\": \"newemail@example.com\",\n    \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/profile/verify-email",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "profile",
+                "verify-email"
+              ]
+            },
+            "description": "Verify email change using OTP sent to new email address"
+          },
+          "response": []
+        }
+      ],
+      "description": "User Profile management. Profile is considered complete when firstName, lastName, dateOfBirth, gender, and securityPin are set."
+    },
+    {
+      "name": "Medical Profile",
+      "item": [
+        {
+          "name": "Get Medical Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/physical-health/medical-profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "physical-health",
+                "medical-profile"
+              ]
+            },
+            "description": "Get user's medical profile information including blood type, height, weight, conditions, etc."
+          },
+          "response": [
+            {
+              "name": "Example Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": []
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"data\": {\n        \"bloodType\": \"O+\",\n        \"heightCm\": 180,\n        \"weightKg\": 75,\n        \"chronicConditions\": [\"Asthma\"],\n        \"mentalHealthSymptoms\": [\"Anxiety\"],\n        \"medications\": [\"Albuterol\"],\n        \"allergies\": [\"Peanuts\", \"Penicillin\"],\n        \"surgeries\": [\"Appendectomy\"],\n        \"familyMedicalHistory\": [\"Diabetes\", \"Heart Disease\"],\n        \"currentDoctors\": [\n            {\n                \"name\": \"Dr. John Smith\",\n                \"phoneNumber\": \"1234567890\",\n                \"countryCode\": \"+1\"\n            }\n        ],\n        \"vaccinationRecords\": [\"COVID-19\", \"Flu 2024\"],\n        \"updatedAt\": \"2025-04-03T06:30:00.000Z\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Medical Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"bloodType\": \"O+\",\n    \"heightCm\": 180,\n    \"weightKg\": 75,\n    \"chronicConditions\": [\"Asthma\"],\n    \"mentalHealthSymptoms\": [\"Anxiety\"],\n    \"medications\": [\"Albuterol\"],\n    \"allergies\": [\"Peanuts\", \"Penicillin\"],\n    \"surgeries\": [\"Appendectomy\"],\n    \"familyMedicalHistory\": [\"Diabetes\", \"Heart Disease\"],\n    \"currentDoctors\": [\n        {\n            \"name\": \"Dr. John Smith\",\n            \"phoneNumber\": \"1234567890\",\n            \"countryCode\": \"+1\"\n        }\n    ],\n    \"vaccinationRecords\": [\"COVID-19\", \"Flu 2024\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/physical-health/medical-profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "physical-health",
+                "medical-profile"
+              ]
+            },
+            "description": "Update medical profile information. Required fields: bloodType, heightCm, weightKg. All array fields are optional with default empty arrays."
+          },
+          "response": []
+        }
+      ],
+      "description": "Medical Profile management. Includes health information like blood type, conditions, medications, etc."
+    },
+    {
+      "name": "Emergency Profile",
+      "item": [
+        {
+          "name": "Get Emergency Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/physical-health/emergency-profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "physical-health",
+                "emergency-profile"
+              ]
+            },
+            "description": "Get user's emergency profile including emergency contacts and hospitals."
+          },
+          "response": [
+            {
+              "name": "Example Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": []
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"data\": {\n        \"emergencyContacts\": [\n            {\n                \"name\": \"Jane Doe\",\n                \"phoneNumber\": \"1234567890\",\n                \"countryCode\": \"+1\",\n                \"relation\": \"Spouse\"\n            }\n        ],\n        \"hospitals\": [\n            {\n                \"name\": \"City Hospital\",\n                \"phoneNumber\": \"9876543210\",\n                \"countryCode\": \"+1\"\n            }\n        ],\n        \"sosEnabled\": true,\n        \"locationPermission\": true,\n        \"updatedAt\": \"2025-04-03T06:30:00.000Z\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Emergency Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"emergencyContacts\": [\n        {\n            \"name\": \"Jane Doe\",\n            \"phoneNumber\": \"1234567890\",\n            \"countryCode\": \"+1\",\n            \"relation\": \"Spouse\"\n        }\n    ],\n    \"hospitals\": [\n        {\n            \"name\": \"City Hospital\",\n            \"phoneNumber\": \"9876543210\",\n            \"countryCode\": \"+1\"\n        }\n    ],\n    \"sosEnabled\": true,\n    \"locationPermission\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/physical-health/emergency-profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "physical-health",
+                "emergency-profile"
+              ]
+            },
+            "description": "Update emergency profile information. Maximum 3 emergency contacts allowed. All fields are required except hospital contactNumber."
+          },
+          "response": []
+        },
+        {
+          "name": "Update SOS Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"sosEnabled\": true,\n    \"locationPermission\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/physical-health/emergency-profile/sos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "physical-health",
+                "emergency-profile",
+                "sos"
+              ]
+            },
+            "description": "Update SOS and location permission settings. Both fields are required booleans."
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Emergency Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/physical-health/emergency-profile/generate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "physical-health",
+                "emergency-profile",
+                "generate"
+              ]
+            },
+            "description": "Generate emergency profile from medical profile data. Requires medical profile to be completed first."
+          },
+          "response": [
+            {
+              "name": "Example Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": []
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Emergency profile generated successfully\",\n    \"data\": {\n        \"emergencyContacts\": [],\n        \"hospitals\": [],\n        \"sosEnabled\": false,\n        \"locationPermission\": false,\n        \"updatedAt\": \"2025-04-03T06:30:00.000Z\"\n    }\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Emergency Profile management. Includes emergency contacts, preferred hospitals, and SOS settings."
+    },
+    {
+      "name": "Addresses",
+      "item": [
+        {
+          "name": "Get All Addresses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/physical-health/address",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "physical-health",
+                "address"
+              ]
+            },
+            "description": "Get all saved addresses for the user."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Specific Address",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/physical-health/address/{{address_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "physical-health",
+                "address",
+                "{{address_id}}"
+              ]
+            },
+            "description": "Get a specific address by its ID. Set the `address_id` variable."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Address",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"addressType\": \"Other\",\n    \"customAddressName\": \"Home\",\n    \"fullName\": \"Pratyaksh Sirsat\",\n    \"phoneNumber\": \"9876543210\",\n    \"countryCode\": \"+91\",\n    \"addressLine1\": \"123 Example St\",\n    \"addressLine2\": \"Floor 2\",\n    \"city\": \"New Delhi\",\n    \"state\": \"Delhi\",\n    \"postalCode\": \"110011\",\n    \"country\": \"India\",\n    \"isDefault\": false,\n    \"familyMembers\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/physical-health/address",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "physical-health",
+                "address"
+              ]
+            },
+            "description": "Create a new saved address."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Address",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"addressType\": \"Work\",\n    \"fullName\": \"Johnathan Doe\",\n    \"phoneNumber\": \"0987654321\",\n    \"countryCode\": \"+1\",\n    \"addressLine1\": \"456 Business Ave\",\n    \"addressLine2\": null,\n    \"city\": \"Busytown\",\n    \"state\": \"CA\",\n    \"postalCode\": \"54321\",\n    \"country\": \"USA\",\n    \"isDefault\": true,\n    \"customAddressName\": null,\n    \"familyMembers\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/physical-health/address/{{address_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "physical-health",
+                "address",
+                "{{address_id}}"
+              ]
+            },
+            "description": "Update an existing address by its ID. Set the `address_id` variable."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Address",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/physical-health/address/{{address_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "physical-health",
+                "address",
+                "{{address_id}}"
+              ]
+            },
+            "description": "Delete an existing address by its ID. Set the `address_id` variable."
+          },
+          "response": []
+        }
+      ],
+      "description": "Address management endpoints."
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "address_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "feedback_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
