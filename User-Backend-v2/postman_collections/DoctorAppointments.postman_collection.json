@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6",
     "name": "Doctor Appointments",
-    "description": "API endpoints for doctor's appointment management",
+    "description": "API endpoints for doctor's appointment management.\n\n## ⚠️ IMPORTANT: Foreign Key Requirements\n\nThe `doctorId` parameter must be a valid `DoctorProfile.userId` (UUID).\n\n### Appointment Status Flow:\n1. Patient creates → Status: `Pending Confirm`\n2. Doctor confirms → Status: `Confirmed`\n3. Doctor rejects → Status: `Rejected`\n4. Doctor completes → Status: `Completed`\n5. Either cancels → Status: `Cancelled`",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -12,25 +12,26 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/api/doctors/:doctorId/appointments?status=Pending&page=1&limit=10",
+          "raw": "{{base_url}}/api/doctors/:doctorId/appointments?page=1&limit=10",
           "host": ["{{base_url}}"],
           "path": ["api", "doctors", ":doctorId", "appointments"],
           "query": [
             {
               "key": "status",
-              "value": "Pending",
-              "description": "Filter by status: Pending, Confirmed, Rejected, Cancelled, Completed"
+              "value": "Pending Confirm",
+              "description": "Filter: Pending Confirm, Confirmed, Rejected, Cancelled, Completed",
+              "disabled": true
             },
             {
               "key": "from",
-              "value": "2024-03-01",
-              "description": "Filter by date range start",
+              "value": "2025-01-01",
+              "description": "Filter by date range start (YYYY-MM-DD)",
               "disabled": true
             },
             {
               "key": "to",
-              "value": "2024-03-31",
-              "description": "Filter by date range end",
+              "value": "2025-12-31",
+              "description": "Filter by date range end (YYYY-MM-DD)",
               "disabled": true
             },
             {
@@ -48,11 +49,11 @@
             {
               "key": "doctorId",
               "value": "{{doctor_id}}",
-              "description": "UUID of the doctor"
+              "description": "UUID from DoctorProfile.userId"
             }
           ]
         },
-        "description": "Get all appointments for a specific doctor with filters"
+        "description": "Get all appointments for a specific doctor with optional filters.\n\n**Returns:** Paginated list of appointments with patient details."
       },
       "response": []
     },
@@ -69,21 +70,21 @@
             {
               "key": "doctorId",
               "value": "{{doctor_id}}",
-              "description": "UUID of the doctor"
+              "description": "UUID from DoctorProfile.userId"
             },
             {
               "key": "appointmentId",
               "value": "{{appointment_id}}",
-              "description": "ID of the appointment"
+              "description": "Integer ID of the appointment"
             }
           ]
         },
-        "description": "Get details of a specific appointment"
+        "description": "Get details of a specific appointment including patient info and uploaded documents."
       },
       "response": []
     },
     {
-      "name": "Update Appointment Status",
+      "name": "Confirm Appointment",
       "request": {
         "method": "PATCH",
         "header": [
@@ -94,7 +95,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"appointmentStatus\": \"Confirmed\",\n    \"confirmationMessage\": \"Looking forward to seeing you!\"\n}"
+          "raw": "{\n    \"appointmentStatus\": \"Confirmed\",\n    \"confirmationMessage\": \"Your appointment is confirmed. Looking forward to seeing you!\"\n}"
         },
         "url": {
           "raw": "{{base_url}}/api/doctors/:doctorId/appointments/:appointmentId",
@@ -104,16 +105,121 @@
             {
               "key": "doctorId",
               "value": "{{doctor_id}}",
-              "description": "UUID of the doctor"
+              "description": "UUID from DoctorProfile.userId"
             },
             {
               "key": "appointmentId",
               "value": "{{appointment_id}}",
-              "description": "ID of the appointment"
+              "description": "Integer ID of the appointment"
             }
           ]
         },
-        "description": "Update the status of an appointment (confirm/reject/complete/cancel)"
+        "description": "Confirm a pending appointment.\n\n**Valid Transitions:** Pending Confirm → Confirmed"
+      },
+      "response": []
+    },
+    {
+      "name": "Reject Appointment",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"appointmentStatus\": \"Rejected\",\n    \"cancelReason\": \"Doctor unavailable on this date\",\n    \"confirmationMessage\": \"Unfortunately, the doctor is not available. Please reschedule.\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/doctors/:doctorId/appointments/:appointmentId",
+          "host": ["{{base_url}}"],
+          "path": ["api", "doctors", ":doctorId", "appointments", ":appointmentId"],
+          "variable": [
+            {
+              "key": "doctorId",
+              "value": "{{doctor_id}}",
+              "description": "UUID from DoctorProfile.userId"
+            },
+            {
+              "key": "appointmentId",
+              "value": "{{appointment_id}}",
+              "description": "Integer ID of the appointment"
+            }
+          ]
+        },
+        "description": "Reject a pending appointment with reason.\n\n**Valid Transitions:** Pending Confirm → Rejected"
+      },
+      "response": []
+    },
+    {
+      "name": "Complete Appointment",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"appointmentStatus\": \"Completed\",\n    \"prescriptionUrl\": \"https://example.com/prescriptions/rx123.pdf\",\n    \"confirmationMessage\": \"Your consultation is complete. Prescription has been uploaded.\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/doctors/:doctorId/appointments/:appointmentId",
+          "host": ["{{base_url}}"],
+          "path": ["api", "doctors", ":doctorId", "appointments", ":appointmentId"],
+          "variable": [
+            {
+              "key": "doctorId",
+              "value": "{{doctor_id}}",
+              "description": "UUID from DoctorProfile.userId"
+            },
+            {
+              "key": "appointmentId",
+              "value": "{{appointment_id}}",
+              "description": "Integer ID of the appointment"
+            }
+          ]
+        },
+        "description": "Mark appointment as completed with optional prescription URL.\n\n**Valid Transitions:** Confirmed → Completed"
+      },
+      "response": []
+    },
+    {
+      "name": "Cancel Appointment (Doctor)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"appointmentStatus\": \"Cancelled\",\n    \"cancelReason\": \"Emergency situation, clinic closed\",\n    \"confirmationMessage\": \"Your appointment has been cancelled due to unforeseen circumstances.\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/doctors/:doctorId/appointments/:appointmentId",
+          "host": ["{{base_url}}"],
+          "path": ["api", "doctors", ":doctorId", "appointments", ":appointmentId"],
+          "variable": [
+            {
+              "key": "doctorId",
+              "value": "{{doctor_id}}",
+              "description": "UUID from DoctorProfile.userId"
+            },
+            {
+              "key": "appointmentId",
+              "value": "{{appointment_id}}",
+              "description": "Integer ID of the appointment"
+            }
+          ]
+        },
+        "description": "Cancel an appointment with reason.\n\n**Valid Transitions:** Pending Confirm/Confirmed → Cancelled"
       },
       "response": []
     }
@@ -127,12 +233,14 @@
     {
       "key": "doctor_id",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "UUID from DoctorProfile.userId"
     },
     {
       "key": "appointment_id",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "Integer ID of an appointment"
     }
   ]
-} 
+}

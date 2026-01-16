@@ -9,7 +9,7 @@ import physicalHealthRoutes from './routes/physicalHealthRoutes';
 import addressRoutes from './routes/physicalHealthRoutes/userRoutes/addressRoutes';
 import feedbackRoutes from './routes/physicalHealthRoutes/userRoutes/feedbackRoutes';
 import doctorRoutes from './doctorsBackend/doctorRoutes';
-import doctorSearchRoutes from './doctorsBackend/doctorRoutes';
+import doctorSearchRoutes from './routes/doctorSearchRoutes';
 import appointmentRoutes from './routes/appointmentRoutes';
 import medAlertRoutes from './routes/medAlertRoutes';
 import { errorHandler } from './middleware/errorHandler';

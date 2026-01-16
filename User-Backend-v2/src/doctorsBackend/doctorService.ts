@@ -8,6 +8,7 @@ import {
   CreateDoctorFAQDto
 } from './types';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -59,18 +60,64 @@ export class DoctorService {
 
   // Create doctor profile
   async createDoctorProfile(doctorId: string, data: CreateDoctorProfileDto) {
-    return prisma.doctorProfile.create({
-      data: {
-        ...data,
-        doctor: {
-          connect: { id: doctorId },
+    return prisma.$transaction(async (tx) => {
+      const doctor = await tx.doctor.findUnique({
+        where: { id: doctorId },
+        select: { id: true },
+      });
+
+      if (!doctor) {
+        const user = await tx.user.findUnique({
+          where: { id: doctorId },
+          select: { email: true },
+        });
+
+        if (!user) {
+          throw new Error('Doctor user not found');
+        }
+
+        const tempPassword = await bcrypt.hash(crypto.randomUUID(), 10);
+
+        await tx.doctor.create({
+          data: {
+            id: doctorId,
+            email: user.email,
+            password: tempPassword,
+          },
+        });
+      }
+
+      const profile = await tx.doctorProfile.upsert({
+        where: { userId: doctorId },
+        create: {
+          ...data,
+          userId: doctorId,
         },
-      },
+        update: {
+          ...data,
+        },
+      });
+
+      await tx.doctor.update({
+        where: { id: doctorId },
+        data: { isProfileCompleted: true },
+      });
+
+      return profile;
     });
   }
 
   // Update doctor profile
   async updateDoctorProfile(doctorId: string, data: Partial<CreateDoctorProfileDto>) {
+    const profile = await prisma.doctorProfile.findUnique({
+      where: { userId: doctorId },
+      select: { userId: true },
+    });
+
+    if (!profile) {
+      throw new Error('Doctor profile not found');
+    }
+
     return prisma.doctorProfile.update({
       where: { userId: doctorId },
       data,

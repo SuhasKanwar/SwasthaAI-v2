@@ -62,6 +62,11 @@ export const rescheduleAppointmentSchema = z.object({
   appointmentSlot: z.string().min(1, 'New appointment slot is required'), // e.g., "10:30"
 });
 
+// Schema for Cancelling (User)
+export const cancelAppointmentSchema = z.object({
+  cancelReason: z.string().min(1, 'Cancel reason is required').max(500, 'Reason too long'),
+});
+
 
 // Query Schemas
 export const doctorSearchSchema = z.object({
@@ -87,5 +92,7 @@ export type DoctorProfile = z.infer<typeof doctorProfileSchema>;
 export type CreateAppointment = z.infer<typeof createAppointmentSchema>;
 export type UpdateAppointment = z.infer<typeof updateAppointmentSchema>;
 export type RescheduleAppointment = z.infer<typeof rescheduleAppointmentSchema>;
+export type CancelAppointment = z.infer<typeof cancelAppointmentSchema>;
 export type DoctorSearchQuery = z.infer<typeof doctorSearchSchema>;
 export type AppointmentListQuery = z.infer<typeof appointmentListSchema>;
+

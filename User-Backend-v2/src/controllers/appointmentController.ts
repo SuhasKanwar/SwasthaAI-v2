@@ -7,7 +7,8 @@ import {
   CreateAppointment,
   UpdateAppointment,
   AppointmentListQuery,
-  RescheduleAppointment // Import the new type
+  RescheduleAppointment,
+  CancelAppointment
 } from '../schemas/doctorSearchSchemas';
 
 export const appointmentController = {
@@ -382,6 +383,64 @@ export const appointmentController = {
         status: 'success',
         message: 'Appointment rescheduled successfully.',
         data: updatedAppointment
+      });
+
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // Cancel appointment (by patient)
+  cancelAppointment: async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const { cancelReason } = req.body as CancelAppointment;
+      const appointmentId = parseInt(id);
+      const userId = req.user.id;
+
+      if (isNaN(appointmentId)) {
+        throw new AppError(400, 'Invalid appointment ID');
+      }
+
+      // Verify appointment exists and belongs to user
+      const existingAppointment = await prisma.appointment.findFirst({
+        where: {
+          id: appointmentId,
+          patientId: userId
+        }
+      });
+
+      if (!existingAppointment) {
+        throw new AppError(404, 'Appointment not found');
+      }
+
+      // Check if cancellation is allowed
+      if (!existingAppointment.cancelAvailable) {
+        throw new AppError(400, 'Cancellation is not available for this appointment');
+      }
+
+      // Check current status
+      if (['Cancelled', 'Completed', 'Rejected'].includes(existingAppointment.appointmentStatus)) {
+        throw new AppError(400, `Cannot cancel a ${existingAppointment.appointmentStatus.toLowerCase()} appointment`);
+      }
+
+      // Update appointment to cancelled
+      const cancelledAppointment = await prisma.appointment.update({
+        where: { id: appointmentId },
+        data: {
+          appointmentStatus: 'Cancelled',
+          cancelReason: cancelReason,
+          cancelAvailable: false,
+          rescheduleAvailable: false,
+          confirmationMessage: `Your appointment with Dr. ${existingAppointment.doctorName} has been cancelled. Reason: ${cancelReason}`,
+          updatedAt: new Date()
+        }
+      });
+
+      res.json({
+        status: 'success',
+        message: 'Appointment cancelled successfully.',
+        data: cancelledAppointment
       });
 
     } catch (error) {
