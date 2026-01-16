@@ -274,7 +274,7 @@ export default function MedAlertsPage() {
       transition={{ duration: 0.6, ease: "anticipate" }}
     >
       <div>
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4 justify-between">
           <Button
             onClick={() => {
               setEditingCategory(null);
@@ -326,7 +326,7 @@ export default function MedAlertsPage() {
       <Separator className="my-6" />
 
       <div>
-        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4 justify-center">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
           <Button
             onClick={() => {
               setEditingReminder(null);
@@ -351,7 +351,7 @@ export default function MedAlertsPage() {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="flex-1 flex justify-center"
+            className="flex-1 flex md:justify-end justify-start"
           >
             <div className="relative w-full max-w-md">
               <Input
