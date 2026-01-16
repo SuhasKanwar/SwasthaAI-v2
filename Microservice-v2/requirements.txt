@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+python-dotenv
+pydantic
+langchain
+langchain-community
+langchain-huggingface
+langchain-groq
+langchain-core
+langchain-text-splitters
+langserve
+sentence-transformers
+faiss-cpu
+pymupdf
+sse_starlette
+python-multipart
+langchain_perplexity

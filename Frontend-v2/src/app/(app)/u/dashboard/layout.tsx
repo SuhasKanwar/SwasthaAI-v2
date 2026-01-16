@@ -1,14 +1,8 @@
 import Sidebar from "@/components/Sidebar";
-import { IconHome } from "@tabler/icons-react";
-import { AlertCircle, BotIcon, HelpCircle } from "lucide-react";
+import { AlertCircle, BotIcon } from "lucide-react";
 import { MdAddCircle } from "react-icons/md";
 
 const sidebarLinks = [
-    {
-        name: "Home",
-        icon: <IconHome />,
-        link: "/u/dashboard/home",
-    },
     {
         name: "Chatbot",
         icon: <BotIcon />,
