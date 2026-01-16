@@ -12,7 +12,9 @@ import doctorRoutes from './doctorsBackend/doctorRoutes';
 import doctorSearchRoutes from './routes/doctorSearchRoutes';
 import appointmentRoutes from './routes/appointmentRoutes';
 import medAlertRoutes from './routes/medAlertRoutes';
+import vaultRouter from './routes/vaultRoutes';
 import { errorHandler } from './middleware/errorHandler';
+import path from 'path';
 
 // Load environment variables
 config();
@@ -31,6 +33,10 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve vault folder statically
+const vaultPath = path.join(__dirname, '../vault');
+app.use('/vault', express.static(vaultPath));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/oauth', oauthRoutes);
@@ -43,6 +49,7 @@ app.use('/api/doctors/search', doctorSearchRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/medalert', medAlertRoutes);
+app.use('/api/vault', vaultRouter);
 
 // Handle 404
 app.use((req: Request, res: Response) => {

@@ -1,5 +1,5 @@
 import Sidebar from "@/components/Sidebar";
-import { AlertCircle, BotIcon, CalendarCheck, Search } from "lucide-react";
+import { AlertCircle, BotIcon, CalendarCheck, Search, Vault } from "lucide-react";
 
 const sidebarLinks = [
   {
@@ -21,6 +21,11 @@ const sidebarLinks = [
     name: "My Appointments",
     icon: <CalendarCheck />,
     link: "/u/dashboard/book-appointments",
+  },
+  {
+    name: "Health Vault",
+    icon: <Vault />,
+    link: "/u/dashboard/health-vault",
   }
 ]
 
