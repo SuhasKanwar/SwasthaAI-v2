@@ -12,8 +12,20 @@ export interface TokenPayload {
   type?: string;
 }
 
-// Environment variable for JWT secret
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+const API_KEY = process.env.API_KEY;
+
+// Use a loose request type to safely access body and headers in all contexts
+const hasValidApiKey = (req: any): boolean => {
+  if (!API_KEY) return false;
+
+  const bodyKey: string | undefined =
+    req?.body?.apiKey || req?.body?.api_key;
+  const headerKey: string | undefined =
+    req?.headers?.['x-api-key'] || req?.headers?.['X-API-KEY'];
+
+  return bodyKey === API_KEY || headerKey === API_KEY;
+};
 
 export const createTokens = (userId: string, email: string): { accessToken: string } => {
   const accessToken = jwt.sign(
@@ -31,6 +43,10 @@ export const verifyToken = (
   next: NextFunction
 ): void => {
   try {
+    if (hasValidApiKey(req)) {
+      return next();
+    }
+
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
       throw new AppError(401, 'No token provided');
@@ -85,6 +101,11 @@ export const authenticateToken = (
   next: NextFunction
 ): void => {
   try {
+    // Bypass JWT auth if a valid API key is provided
+    if (hasValidApiKey(req)) {
+      return next();
+    }
+
     const authHeader = req.headers.authorization;
     if (!authHeader) {
       throw new AppError(401, 'Authentication token required');
