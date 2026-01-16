@@ -1,9 +1,6 @@
-import { Inter } from "next/font/google";
 import "./globals.css";
 import type React from "react";
 import { Providers } from "@/providers/Providers";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "SwasthaAI",
@@ -33,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.className} bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 overflow-x-hidden`}
+        className="bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 overflow-x-hidden"
       >
         <main className="min-h-screen">
           <Providers>{children}</Providers>
