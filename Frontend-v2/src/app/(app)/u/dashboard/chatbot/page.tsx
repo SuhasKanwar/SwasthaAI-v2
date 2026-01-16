@@ -2,69 +2,69 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import BackToLogin from "@/components/BackToLogin";
-import { useAuth } from "@/providers/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Loader2, Mic, Send, UploadCloud, User, Bot, X } from "lucide-react";
 import clsx from "clsx";
 import { toast } from "sonner";
-import axios from "axios";
+import { microserviceApi } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { LinkPreview } from "@/components/ui/link-preview";
+import { useAuth } from "@/providers/AuthProvider";
 
 const SUGGESTIONS = [
 	{
-		title: "Medication Guidance",
-		desc: "Ask about your prescriptions, dosages, or side effects.",
-		question: "What should I know about my medication?",
+		title: "Drug Repurposing Scan",
+		desc: "Explore new therapeutic indications for an existing molecule.",
+		question: "Suggest plausible repurposing indications for [drug] and explain the rationale with key evidence types to verify.",
 	},
 	{
-		title: "Symptom Checker",
-		desc: "Describe your symptoms and get AI-powered insights.",
-		question: "What could be causing my symptoms?",
+		title: "Patent Landscape",
+		desc: "Identify relevant patents, assignees, and claim themes.",
+		question: "Summarize the patent landscape for repurposing [drug] in [indication], including key assignees and claim focus areas.",
 	},
 	{
-		title: "Diet & Lifestyle",
-		desc: "Get advice on healthy eating and daily routines.",
-		question: "How can I improve my diet and lifestyle?",
+		title: "Clinical Trial Evidence",
+		desc: "Find and synthesize trials, endpoints, and outcomes.",
+		question: "What clinical trials exist for [drug] in [indication]? Summarize phases, endpoints, results, and current status.",
 	},
 	{
-		title: "Mental Health",
-		desc: "Talk about stress, anxiety, or sleep issues.",
-		question: "How can I manage my mental health better?",
+		title: "Literature Synthesis",
+		desc: "Aggregate preclinical + clinical findings from papers.",
+		question: "Create a structured literature summary for [drug] in [indication]: mechanisms, study types, strength of evidence, and gaps.",
 	},
 	{
-		title: "General Queries",
-		desc: "Ask any health-related questions you have.",
-		question: "What do I need to know about my health?",
+		title: "Mechanism & Target Hypothesis",
+		desc: "Connect MoA, pathways, biomarkers, and disease biology.",
+		question: "Propose a mechanism-based hypothesis for why [drug] could work in [indication], including pathways and biomarkers to monitor.",
 	},
 	{
-		title: "Upload Health Report",
-		desc: "Share your health report for personalized assistance.",
-		question: "Can you analyze my health report?",
+		title: "Safety / PK / DDIs",
+		desc: "Assess known safety signals and repurposing constraints.",
+		question: "Outline key safety, PK, and drug-drug interaction considerations for using [drug] in [indication], and suggest risk mitigations.",
 	},
 	{
-		title: "Emergency Advice",
-		desc: "Get guidance on what to do in case of an emergency.",
-		question: "What should I do in a health emergency?",
+		title: "Market & Access Snapshot",
+		desc: "Understand competition, positioning, and adoption barriers.",
+		question: "Give a market and access snapshot for [indication]: standard of care, competitors, unmet needs, and positioning for a repurposed [drug].",
 	},
 	{
-		title: "Health Tips",
-		desc: "Ask for tips on maintaining a healthy lifestyle.",
-		question: "What are some tips for staying healthy?",
-	}
+		title: "Innovation Brief (Decision-Ready)",
+		desc: "Generate a concise, structured brief with next steps.",
+		question: "Create an innovation brief for repurposing [drug] in [indication] with: evidence summary, risks, IP considerations, and recommended next experiments.",
+	},
 ];
 
-export default function SwasthaAIChatbotPage() {
-	const { isLoggedIn, token } = useAuth();
+export default function ChatbotPage() {
+	const { token, isLoggedIn } = useAuth();
 	const [messages, setMessages] = useState<any[]>([]);
 	const [input, setInput] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [voiceActive, setVoiceActive] = useState(false);
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
+	const [deepResearch, setDeepResearch] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -73,6 +73,15 @@ export default function SwasthaAIChatbotPage() {
 			chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
 		}
 	}, [messages, loading]);
+
+	const toggleDeepResearch = () => {
+		setDeepResearch((prev) => {
+			const next = !prev;
+			if (next) setSelectedFile(null);
+			toast.message(next ? "Deep Research enabled." : "Deep Research disabled.");
+			return next;
+		});
+	};
 
 	const handleSend = async () => {
 		if (!input.trim()) return;
@@ -84,40 +93,67 @@ export default function SwasthaAIChatbotPage() {
 		setInput("");
 
 		try {
-			let response;
-			if (selectedFile) {
-				const formData = new FormData();
-				formData.append("query", input);
-				formData.append("file", selectedFile);
+			let responseData: any;
 
-				response = await axios.post(
-					`${process.env.NEXT_PUBLIC_MICROSERVICE_BASE_URL}/chatbot/query-with-file`,
-					formData,
-					{
-						headers: {
-							"Content-Type": "multipart/form-data",
-							Authorization: `Bearer ${token}`,
-						},
-					}
-				);
+			if (deepResearch) {
+				const controller = new AbortController();
+				const timeoutId = window.setTimeout(() => controller.abort(), 60_000);
+
+				const res = await fetch("/api/n8n", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ query: userMsg.text }),
+					signal: controller.signal,
+				}).finally(() => window.clearTimeout(timeoutId));
+
+				if (!res.ok) {
+					const errText = await res.text().catch(() => "");
+					throw new Error(
+						`Deep research request failed: ${res.status} ${res.statusText}${errText ? ` - ${errText.slice(0, 300)}` : ""}`
+					);
+				}
+
+				const raw = await res.json();
+				try {
+					responseData = raw.output[0].content.text;
+				} catch {
+					responseData = { text: raw };
+				}
 			} else {
-				response = await axios.post(
-					`${process.env.NEXT_PUBLIC_MICROSERVICE_BASE_URL}/chatbot/query`,
-					{ query: input },
-					{
+				let response;
+				if (selectedFile) {
+					const formData = new FormData();
+					formData.append("query", userMsg.text);
+					formData.append("file", selectedFile);
+
+					response = await microserviceApi.post("/chatbot/query-with-file", formData, {
 						headers: {
-							"Content-Type": "application/json",
 							Authorization: `Bearer ${token}`,
 						},
-					}
-				);
+					});
+				} else {
+					response = await microserviceApi.post(
+						"/chatbot/query",
+						{ query: userMsg.text },
+						{
+							headers: {
+								"Content-Type": "application/json",
+								Authorization: `Bearer ${token}`,
+							},
+						}
+					);
+				}
+				responseData = response.data;
 			}
 
 			const botMsg = {
 				id: Date.now() + 1,
 				sender: "bot",
-				text: response.data?.answer || "Sorry, I couldn't process your request.",
-				citations: response.data?.citations || [],
+				text:
+					responseData?.answer ||
+					responseData?.text ||
+					"Sorry, I couldn't process your request.",
+				citations: responseData?.citations || [],
 			};
 			setMessages((prev) => [...prev, botMsg]);
 		} catch (err: any) {
@@ -157,6 +193,11 @@ export default function SwasthaAIChatbotPage() {
 	};
 
 	const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+		if (deepResearch) {
+			toast.info("File upload is disabled in Deep Research mode.");
+			e.target.value = "";
+			return;
+		}
 		if (e.target.files && e.target.files.length > 0) {
 			setSelectedFile(e.target.files[0]);
 			toast.success(`File "${e.target.files[0].name}" selected!`);
@@ -178,26 +219,29 @@ export default function SwasthaAIChatbotPage() {
 				.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 				`}
 			</style>
+
 			<div className="w-full max-w-7xl flex-1 flex flex-col justify-center items-center mx-auto">
 				{messages.length === 0 && !loading && (
 					<div className="flex flex-col items-center mt-4 mb-6 w-full">
 						<h1 className="text-4xl md:text-5xl font-bold text-center mb-4">
 							<span className="text-slate-800">Swastha</span>
-							<span className="bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent">
-								AI Assessment
+							<span className="bg-linear-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent">
+								AI Research Accelerator
 							</span>
 							<span className="ml-2">
 								<Bot className="inline w-10 h-10 text-blue-400 align-middle" />
 							</span>
 						</h1>
+
 						<p className="text-lg text-slate-600 text-center mb-8">
-							Hi there! I'm SwasthaAI, ready to assist with your health needs.
+							Agentic AI for faster drug repurposing—synthesizing patents, trials, literature, and market data into decision-ready innovation briefs.
 						</p>
+
 						<div className="flex flex-wrap justify-center gap-4 mb-10">
 							{SUGGESTIONS.map((s, i) => (
 								<div
 									key={i}
-									className="rounded-xl border border-slate-200 shadow-sm p-5 w-64 bg-white hover:shadow-md transition group cursor-pointer"
+									className="rounded-xl border border-slate-200 shadow-sm p-5 w-72 bg-white hover:shadow-md transition group cursor-pointer"
 									style={{ minHeight: 120 }}
 									onClick={() => setInput(s.question)}
 									role="button"
@@ -228,10 +272,8 @@ export default function SwasthaAIChatbotPage() {
 							))}
 						</div>
 						<div className="text-xs text-slate-400 text-center mt-2">
-							<span className="font-semibold text-blue-500">
-								RAG-based chatbot
-							</span>{" "}
-							&mdash; Upload your health report and ask questions for personalized answers.
+							<span className="font-semibold text-blue-500">Master–Worker agent workflow</span>{" "}
+							&mdash; Upload research documents and ask questions to generate structured, citable insights.
 						</div>
 					</div>
 				)}
@@ -266,7 +308,7 @@ export default function SwasthaAIChatbotPage() {
 									className={clsx(
 										"rounded-xl px-4 py-2 max-w-[70%] whitespace-pre-line",
 										msg.sender === "user"
-											? "bg-gradient-to-r from-blue-500 to-teal-500 text-white ml-auto"
+											? "bg-linear-to-r from-blue-500 to-teal-500 text-white ml-auto"
 											: "bg-teal-100 text-slate-800"
 									)}
 								>
@@ -329,7 +371,7 @@ export default function SwasthaAIChatbotPage() {
 				</div>
 			</div>
 
-			<div className="w-full max-w-3xl mx-auto mb-6">
+			<div className="w-full max-w-4xl mx-auto mb-6">
 				{selectedFile && (
 					<div className="flex items-center justify-between bg-slate-100 rounded-lg px-3 py-2 mb-2">
 						<span className="text-sm text-slate-700 truncate max-w-[80%]">
@@ -346,14 +388,32 @@ export default function SwasthaAIChatbotPage() {
 						</Button>
 					</div>
 				)}
-				<div className="rounded-2xl border border-slate-200 shadow-md flex items-center px-6 py-3 gap-3 bg-white">
+				<div className="rounded-2xl border border-slate-200 shadow-md flex items-center px-6 py-3 gap-2 bg-white">
 					<Button
-						variant="ghost"
+						variant={deepResearch ? "default" : "outline"}
+						className={clsx(
+							deepResearch
+								? "bg-linear-to-r from-blue-500 to-teal-500 text-white"
+								: "text-slate-600"
+						)}
+						onClick={toggleDeepResearch}
+						disabled={loading}
+						title="Toggle Deep Research mode"
+					>
+						Deep Research
+					</Button>
+
+					<Button
+						variant="outline"
 						size="icon"
 						className="text-slate-500"
 						onClick={() => fileInputRef.current?.click()}
-						title="Upload health report"
-						disabled={loading}
+						title={
+							deepResearch
+								? "Disabled in Deep Research mode"
+								: "Upload research document"
+						}
+						disabled={loading || deepResearch}
 					>
 						<UploadCloud className="w-5 h-5" />
 					</Button>
@@ -363,11 +423,12 @@ export default function SwasthaAIChatbotPage() {
 						ref={fileInputRef}
 						className="hidden"
 						onChange={handleFileUpload}
+						disabled={loading || deepResearch}
 					/>
 					<input
 						type="text"
-						className="flex-1 outline-none border-none bg-transparent px-4 py-2 text-base max-w-[600px]"
-						placeholder="Tell us about your health"
+						className="flex-1 outline-none border-none bg-transparent px-4 text-base max-w-[600px]"
+						placeholder="Ask about a drug, indication, or evidence (patents, trials, market, etc.)"
 						value={input}
 						onChange={(e) => setInput(e.target.value)}
 						onKeyDown={(e) => {
@@ -391,7 +452,7 @@ export default function SwasthaAIChatbotPage() {
 					<Button
 						variant="default"
 						size="icon"
-						className="bg-gradient-to-r from-blue-500 to-teal-500 text-white"
+						className="bg-linear-to-r from-blue-500 to-teal-500 text-white"
 						onClick={handleSend}
 						disabled={loading || !input.trim()}
 						title="Send"
@@ -400,11 +461,9 @@ export default function SwasthaAIChatbotPage() {
 					</Button>
 				</div>
 				<div className="text-xs text-slate-400 text-center mt-2">
-					This is a{" "}
-					<span className="font-semibold text-blue-500">
-						RAG-based chatbot
-					</span>
-					. Upload your health report and ask questions for personalized answers.
+					This is an{" "}
+					<span className="font-semibold text-blue-500">agentic, multi-source research assistant</span>
+					. Upload documents and generate structured, decision-ready innovation briefs.
 				</div>
 			</div>
 		</section>
