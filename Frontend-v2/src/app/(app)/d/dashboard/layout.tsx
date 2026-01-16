@@ -1,5 +1,5 @@
 import Sidebar from "@/components/Sidebar";
-import { User, Building, CalendarCheck, Home } from "lucide-react";
+import { User, Building, CalendarCheck, Home, FileText } from "lucide-react";
 
 const sidebarLinks = [
   {
@@ -21,6 +21,11 @@ const sidebarLinks = [
     name: "Appointments",
     icon: <CalendarCheck />,
     link: "/d/dashboard/appointments",
+  },
+  {
+    name: "Health Vault",
+    icon: <FileText />,
+    link: "/d/dashboard/health-vault",
   }
 ]
 

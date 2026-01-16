@@ -2,6 +2,7 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 import prisma from '../config/prisma';
 import { AppError } from '../utils/errors';
 import { UpdateAppointmentStatus, AppointmentFilters, AppointmentParams } from './types';
+import { generatePrescriptionPdf } from '../utils/pdfUtils';
 
 export class DoctorAppointmentController {
   private calculateAge(dateOfBirth: Date) {
@@ -254,6 +255,63 @@ export class DoctorAppointmentController {
           select: { id: true }
         });
 
+        const pdf = await generatePrescriptionPdf({
+          recordId: record.id,
+          appointmentDate: appointmentDate,
+          patientName: existingAppointment.patientName,
+          patientAge,
+          patientGender: patient.gender?.toUpperCase() || 'OTHER',
+          doctorName: existingAppointment.doctorName,
+          doctorRegistrationNo: doctor.medicalRegistrationNumber,
+          doctorSpecialization: existingAppointment.specialization || doctor.specialty,
+          clinicName: existingAppointment.clinicName,
+          clinicAddress: existingAppointment.clinicAddress,
+          prescription: {
+            diagnosis: updateData.prescription.diagnosis,
+            symptoms: updateData.prescription.symptoms,
+            doctorAdvice: updateData.prescription.doctorAdvice,
+            followUpDate: updateData.prescription.followUpDate
+              ? new Date(updateData.prescription.followUpDate)
+              : undefined,
+            medicines: updateData.prescription.medicines.map((medicine) => ({
+              medicineName: medicine.medicineName,
+              dosage: medicine.dosage,
+              frequency: medicine.frequency,
+              instructions: medicine.instructions,
+              duration: medicine.duration,
+              chemicalComposition: medicine.chemicalComposition,
+              form: medicine.form
+            }))
+          }
+        });
+
+        await prisma.healthRecord.update({
+          where: { id: record.id },
+          data: {
+            pdfUrl: pdf.publicUrl,
+            originalFileUrl: pdf.publicUrl,
+            originalFileType: 'application/pdf',
+            originalFileName: pdf.filename,
+            fileSize: pdf.size
+          }
+        });
+
+        await prisma.vaultFile.create({
+          data: {
+            userId: existingAppointment.patientId,
+            title: `Prescription - ${existingAppointment.doctorName} - ${appointmentDate.toDateString()}`,
+            notes: updateData.prescription.doctorAdvice || null,
+            recordType: 'PRESCRIPTION',
+            filename: pdf.filename,
+            originalName: pdf.filename,
+            mimeType: 'application/pdf',
+            size: pdf.size,
+            path: pdf.filePath,
+            publicUrl: pdf.publicUrl
+          }
+        });
+
+        dataToUpdate.prescriptionUrl = pdf.publicUrl;
         healthRecordId = record.id;
       }
 

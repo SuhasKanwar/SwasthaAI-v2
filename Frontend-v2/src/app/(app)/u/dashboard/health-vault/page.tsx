@@ -25,6 +25,32 @@ interface VaultReport {
   userId?: string;
 }
 
+interface PrescriptionMedicine {
+  medicineName: string;
+  dosage: string;
+  frequency: string;
+  instructions: string;
+  duration: number;
+  chemicalComposition: string;
+  form: string;
+}
+
+interface PrescriptionRecord {
+  id: string;
+  date: string;
+  doctorName: string;
+  doctorSpecialization: string;
+  patientName: string;
+  pdfUrl?: string | null;
+  prescription?: {
+    diagnosis: string;
+    symptoms: string[];
+    doctorAdvice?: string | null;
+    followUpDate?: string | null;
+    medicines: PrescriptionMedicine[];
+  } | null;
+}
+
 export default function HealthVaultPage() {
   const { token, isLoggedIn } = useAuth();
 
@@ -34,6 +60,8 @@ export default function HealthVaultPage() {
 
   const [reports, setReports] = useState<VaultReport[]>([]);
   const [loadingReports, setLoadingReports] = useState(false);
+  const [prescriptions, setPrescriptions] = useState<PrescriptionRecord[]>([]);
+  const [loadingPrescriptions, setLoadingPrescriptions] = useState(false);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState("");
@@ -65,6 +93,7 @@ export default function HealthVaultPage() {
       setPinVerified(true);
       toast.success("PIN verified. Health Vault unlocked.");
       fetchReports();
+      fetchPrescriptions();
     } catch (err: any) {
       const status = err?.response?.status;
       if (status === 401) {
@@ -88,6 +117,20 @@ export default function HealthVaultPage() {
       toast.error("Failed to load your reports.");
     } finally {
       setLoadingReports(false);
+    }
+  };
+
+  const fetchPrescriptions = async () => {
+    setLoadingPrescriptions(true);
+    try {
+      const res = await userApi.get("/api/physical-health/health-vault", {
+        params: { page: 1, limit: 50 },
+      });
+      setPrescriptions(res.data?.records || []);
+    } catch {
+      toast.error("Failed to load prescriptions.");
+    } finally {
+      setLoadingPrescriptions(false);
     }
   };
 
@@ -176,8 +219,20 @@ export default function HealthVaultPage() {
         r.mimeType.toLowerCase().includes("pdf") ||
         r.originalName.toLowerCase().endsWith(".pdf")
     );
-    if (pdfReports.length === 0) {
-      toast.info("No PDF reports available to summarize.");
+
+    const prescriptionPdfs = prescriptions
+      .filter((p) => p.pdfUrl)
+      .map((p) => ({
+        id: p.id,
+        title: `Prescription - ${p.doctorName}`,
+        originalName: `prescription-${p.id}.pdf`,
+        publicUrl: p.pdfUrl!,
+        mimeType: "application/pdf",
+      }));
+
+    const allPdfSources = [...pdfReports, ...prescriptionPdfs];
+    if (allPdfSources.length === 0) {
+      toast.info("No PDF reports or prescriptions available to summarize.");
       return;
     }
 
@@ -185,7 +240,7 @@ export default function HealthVaultPage() {
     try {
       let combined = "";
 
-      for (const report of pdfReports) {
+      for (const report of allPdfSources) {
         try {
           const url = `${fileBaseUrl}${report.publicUrl}`;
           const res = await fetch(url);
@@ -418,6 +473,64 @@ ${text}`;
         {/* Upload + list, only after PIN verified */}
         {pinVerified && (
           <>
+            {/* Prescriptions section */}
+            <section className="mb-8">
+              <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <FileText className="w-5 h-5 text-blue-500" />
+                  <h2 className="text-lg font-semibold text-slate-800">
+                    Prescriptions from your doctors
+                  </h2>
+                </div>
+                {loadingPrescriptions && (
+                  <p className="text-sm text-slate-500">Loading prescriptions...</p>
+                )}
+                {!loadingPrescriptions && prescriptions.length === 0 && (
+                  <p className="text-sm text-slate-500">
+                    No prescriptions available yet.
+                  </p>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {prescriptions.map((record) => (
+                    <div
+                      key={record.id}
+                      className="border border-slate-200 rounded-lg p-4 space-y-2"
+                    >
+                      <div className="flex items-center justify-between text-sm text-slate-500">
+                        <span>{record.doctorName}</span>
+                        <span>{new Date(record.date).toLocaleDateString("en-IN")}</span>
+                      </div>
+                      <div className="text-sm">
+                        <p className="font-medium text-slate-800">Diagnosis</p>
+                        <p className="text-slate-600">
+                          {record.prescription?.diagnosis || "—"}
+                        </p>
+                      </div>
+                      <div className="text-sm">
+                        <p className="font-medium text-slate-800">Medicines</p>
+                        <ul className="list-disc ml-5 text-slate-600">
+                          {(record.prescription?.medicines || []).map((med, idx) => (
+                            <li key={`${record.id}-med-${idx}`}>
+                              {med.medicineName} • {med.dosage} • {med.frequency}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      {record.pdfUrl && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(record.pdfUrl!, "_blank")}
+                        >
+                          View PDF
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
             {/* Upload section */}
             <section className="mb-8">
               <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
