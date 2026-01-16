@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
   },
   typescript: {
     ignoreBuildErrors: true,
-  }
+  },
 
   async rewrites() {
     const destination =
