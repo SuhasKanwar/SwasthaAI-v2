@@ -73,9 +73,17 @@ export default function LoginPage() {
       if (data.token) {
         setToken(data.token);
         setRole(data.user.role);
+
+        // Store the user ID based on role
+        if (data.user.role === "doctor") {
+          sessionStorage.setItem("doctor_id", data.user.id);
+        } else {
+          sessionStorage.setItem("user_id", data.user.id);
+        }
+
         toast.success("Login successful!");
         setStep("done");
-        if(data.user.role === "patient") {
+        if (data.user.role === "patient") {
           router.push("/u/dashboard");
         }
         else {

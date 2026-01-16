@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "t2u3v4w5-x6y7-8z9a-b1c2-d3e4f5g6h7i8",
     "name": "Swastha Appointments",
-    "description": "API endpoints for appointment scheduling, management, and history",
+    "description": "API endpoints for appointment scheduling, management, and history.\n\n## ⚠️ IMPORTANT: Foreign Key Requirements\n\nTo avoid FK constraint errors when creating appointments:\n\n1. **patientId** = Authenticated User's ID (from login token)\n2. **doctorId** = `DoctorProfile.userId` (NOT Doctor.id directly)\n3. **clinicId** = `DoctorClinic.id` (must belong to the doctor)\n\n### Pre-requisites:\n- Doctor must have completed profile (DoctorProfile exists)\n- Doctor must have at least one clinic (DoctorClinic exists)\n- User must be authenticated",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "12345678"
   },
@@ -28,25 +28,25 @@
                   "key": "doctorId",
                   "value": "{{doctor_id}}",
                   "type": "text",
-                  "description": "UUID of the doctor"
+                  "description": "REQUIRED: UUID from DoctorProfile.userId (NOT Doctor.id)"
                 },
                 {
                   "key": "clinicId",
                   "value": "{{clinic_id}}",
                   "type": "text",
-                  "description": "(Optional) UUID of the specific clinic. If omitted, the doctor's first available clinic will be used."
+                  "description": "(Optional) UUID from DoctorClinic.id. If omitted, uses doctor's first clinic."
                 },
                 {
                   "key": "appointmentDate",
                   "value": "2025-04-15",
                   "type": "text",
-                  "description": "Date of appointment (YYYY-MM-DD)"
+                  "description": "REQUIRED: Date of appointment (YYYY-MM-DD format)"
                 },
                 {
                   "key": "appointmentSlot",
                   "value": "10:30",
                   "type": "text",
-                  "description": "Time slot (e.g., HH:MM)"
+                  "description": "REQUIRED: Time slot (e.g., HH:MM or 10:30 AM)"
                 },
                 {
                   "key": "symptomsEntered",
@@ -58,30 +58,30 @@
                   "key": "patientName",
                   "value": "Test Patient",
                   "type": "text",
-                  "description": "Name of the patient for the appointment"
+                  "description": "REQUIRED: Name of the patient for the appointment"
                 },
                 {
                   "key": "patientContact",
                   "value": "9876543210",
                   "type": "text",
-                  "description": "Contact number for the patient"
+                  "description": "REQUIRED: Contact number (min 10 digits)"
                 },
                 {
                   "key": "addressType",
                   "value": "saved",
                   "type": "text",
-                  "description": "'saved' or 'new'"
+                  "description": "REQUIRED: 'saved' or 'new'"
                 },
                 {
                   "key": "payOnConsultation",
                   "value": "false",
                   "type": "text",
-                  "description": "Boolean (true/false) if paying later"
+                  "description": "(Optional) Boolean - pay at clinic instead of online"
                 },
                 {
                   "key": "documents",
                   "type": "file",
-                  "description": "(Optional) Upload medical documents",
+                  "description": "(Optional) Upload medical documents (images/PDFs)",
                   "src": []
                 }
               ]
@@ -96,7 +96,62 @@
                 "appointments"
               ]
             },
-            "description": "Schedule a new appointment with a doctor"
+            "description": "Schedule a new appointment with a doctor.\n\n**Response Status Codes:**\n- 201: Appointment created successfully\n- 400: Slot already booked / No clinic found\n- 404: Doctor not found (invalid doctorId)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Appointments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/appointments?page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "appointments"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Pending Confirm",
+                  "description": "Filter: Pending Confirm, Confirmed, Cancelled, Completed",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "2025-01-01",
+                  "description": "Filter by date range start (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "2025-12-31",
+                  "description": "Filter by date range end (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of results per page"
+                }
+              ]
+            },
+            "description": "Get all appointments for the current authenticated user with optional filters."
           },
           "response": []
         },
@@ -125,11 +180,11 @@
                 {
                   "key": "id",
                   "value": "{{appointment_id}}",
-                  "description": "Appointment ID"
+                  "description": "Appointment ID (integer)"
                 }
               ]
             },
-            "description": "Get details of a specific appointment"
+            "description": "Get details of a specific appointment.\n\n**Note:** Only returns appointments belonging to the authenticated user."
           },
           "response": []
         },
@@ -172,66 +227,55 @@
                 }
               ]
             },
-            "description": "Reschedule an existing appointment to a new date and time slot."
+            "description": "Reschedule an existing appointment to a new date and time slot.\n\n**Rules:**\n- Cannot reschedule cancelled/completed appointments\n- New slot must be available\n- Original date stored in rescheduledFrom field"
           },
           "response": []
         },
         {
-          "name": "Get All Appointments",
+          "name": "Cancel Appointment",
           "request": {
-            "method": "GET",
+            "method": "PATCH",
             "header": [
               {
                 "key": "Authorization",
                 "value": "Bearer {{access_token}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"cancelReason\": \"Unable to attend due to schedule conflict\"\n}"
+            },
             "url": {
-              "raw": "{{base_url}}/api/appointments?status=Pending&page=1&limit=10",
+              "raw": "{{base_url}}/api/appointments/:id/cancel",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
-                "appointments"
+                "appointments",
+                ":id",
+                "cancel"
               ],
-              "query": [
+              "variable": [
                 {
-                  "key": "status",
-                  "value": "Pending",
-                  "description": "Filter by status: Pending, Confirmed, Cancelled, etc."
-                },
-                {
-                  "key": "from",
-                  "value": "2023-06-01",
-                  "description": "Filter by date range start",
-                  "disabled": true
-                },
-                {
-                  "key": "to",
-                  "value": "2023-06-30",
-                  "description": "Filter by date range end",
-                  "disabled": true
-                },
-                {
-                  "key": "page",
-                  "value": "1",
-                  "description": "Page number for pagination"
-                },
-                {
-                  "key": "limit",
-                  "value": "10",
-                  "description": "Number of results per page"
+                  "key": "id",
+                  "value": "{{appointment_id}}",
+                  "description": "Appointment ID to cancel"
                 }
               ]
             },
-            "description": "Get all appointments for the current authenticated user"
+            "description": "Cancel an existing appointment.\n\n**Rules:**\n- Cannot cancel already cancelled/completed appointments\n- cancelReason is required (1-500 chars)"
           },
           "response": []
         }
       ],
-      "description": "Create, view, and update appointments"
+      "description": "Create, view, reschedule, cancel and manage appointments"
     }
   ],
   "event": [
@@ -263,17 +307,26 @@
     {
       "key": "access_token",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "JWT token from user login"
     },
     {
       "key": "appointment_id",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "Integer ID of an appointment"
     },
     {
       "key": "doctor_id",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "UUID from DoctorProfile.userId"
+    },
+    {
+      "key": "clinic_id",
+      "value": "",
+      "type": "string",
+      "description": "UUID from DoctorClinic.id"
     }
   ]
 }

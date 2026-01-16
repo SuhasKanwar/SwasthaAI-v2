@@ -59,6 +59,10 @@ export class DoctorController {
       const profile = await doctorService.createDoctorProfile(doctorId, data);
       res.status(201).json(profile);
     } catch (error) {
+      if (error instanceof Error && (error.message === 'Doctor not found' || error.message === 'Doctor user not found')) {
+        res.status(404).json({ error: 'Doctor not found' });
+        return;
+      }
       res.status(500).json({ error: 'Failed to create doctor profile' });
     }
   }
@@ -71,6 +75,10 @@ export class DoctorController {
       const profile = await doctorService.updateDoctorProfile(doctorId, data);
       res.json(profile);
     } catch (error) {
+      if (error instanceof Error && error.message === 'Doctor profile not found') {
+        res.status(404).json({ error: 'Doctor profile not found' });
+        return;
+      }
       res.status(500).json({ error: 'Failed to update doctor profile' });
     }
   }

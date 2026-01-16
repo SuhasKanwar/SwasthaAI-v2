@@ -4,9 +4,9 @@ import { validateBody, validateQuery } from '../middleware/validation';
 import { appointmentController } from '../controllers/appointmentController';
 import {
   createAppointmentSchema,
-  // updateAppointmentSchema,
   appointmentListSchema,
-  rescheduleAppointmentSchema // Import the new schema
+  rescheduleAppointmentSchema,
+  cancelAppointmentSchema
 } from '../schemas/doctorSearchSchemas';
 import multer from 'multer';
 
@@ -32,17 +32,17 @@ router.get('/',
 // Get single appointment
 router.get('/:id', appointmentController.getAppointment as RequestHandler);
 
-// Update appointment (status, details, etc.) - Using form-data
-// router.put('/:id',
-//   upload.none(), // Use multer to handle form-data parsing even without files
-//   validateBody(updateAppointmentSchema),
-//   appointmentController.updateAppointment as RequestHandler
-// );
-
 // Reschedule appointment
 router.patch('/:id/reschedule',
   validateBody(rescheduleAppointmentSchema),
   appointmentController.rescheduleAppointment as RequestHandler
 );
 
+// Cancel appointment
+router.patch('/:id/cancel',
+  validateBody(cancelAppointmentSchema),
+  appointmentController.cancelAppointment as RequestHandler
+);
+
 export default router;
+

@@ -1,29 +1,27 @@
 import Sidebar from "@/components/Sidebar";
-import { IconHome } from "@tabler/icons-react";
-import { AlertCircle, HelpCircle } from "lucide-react";
-import { MdAddCircle } from "react-icons/md";
+import { User, Building, CalendarCheck, Home } from "lucide-react";
 
 const sidebarLinks = [
-    {
-        name: "Home",
-        icon: <IconHome />,
-        link: "/d/home",
-    },
-    {
-        name: "MedAlerts",
-        icon: <AlertCircle />,
-        link: "/d/dashboard/med-alerts",
-    },
-    {
-        name: "Book Appointment",
-        icon: <MdAddCircle />,
-        link: "/d/dashboard/book-appointment",
-    },
-    {
-        name: "Help",
-        icon: <HelpCircle />,
-        link: "/d/dashboard/help",
-    },
+  {
+    name: "Dashboard",
+    icon: <Home />,
+    link: "/d/dashboard",
+  },
+  {
+    name: "My Profile",
+    icon: <User />,
+    link: "/d/dashboard/profile",
+  },
+  {
+    name: "My Clinics",
+    icon: <Building />,
+    link: "/d/dashboard/clinics",
+  },
+  {
+    name: "Appointments",
+    icon: <CalendarCheck />,
+    link: "/d/dashboard/appointments",
+  }
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
