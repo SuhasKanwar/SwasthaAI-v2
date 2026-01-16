@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { userApi } from "@/lib/api";
+import { userApi, microserviceApi } from "@/lib/api";
 import BackToLogin from "@/components/BackToLogin";
 import { useAuth } from "@/providers/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Lock, FileText, UploadCloud, Eye } from "lucide-react";
+import { Lock, FileText, UploadCloud, Eye, Bot, Send } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface VaultReport {
   id: string;
@@ -24,7 +26,7 @@ interface VaultReport {
 }
 
 export default function HealthVaultPage() {
-  const { isLoggedIn } = useAuth();
+  const { token, isLoggedIn } = useAuth();
 
   const [pin, setPin] = useState("");
   const [pinVerified, setPinVerified] = useState(false);
@@ -40,6 +42,14 @@ export default function HealthVaultPage() {
   const [uploading, setUploading] = useState(false);
 
   const [activeReport, setActiveReport] = useState<VaultReport | null>(null);
+
+  const [aiSummary, setAiSummary] = useState("");
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [qaQuestion, setQaQuestion] = useState("");
+  const [qaLoading, setQaLoading] = useState(false);
+  const [qaMessages, setQaMessages] = useState<
+    { id: number; sender: "user" | "bot"; text: string }[]
+  >([]);
 
   const fileBaseUrl =
     (userApi.defaults.baseURL?.replace(/\/$/, "") as string | undefined) || "";
@@ -142,8 +152,222 @@ export default function HealthVaultPage() {
     setActiveReport(report);
   };
 
+  const getAuthToken = () => {
+    if (token) return token;
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("access_token");
+    }
+    return null;
+  };
+
+  const generateSummary = async () => {
+    if (!pinVerified) {
+      toast.error("Verify PIN before generating AI summary.");
+      return;
+    }
+    const authToken = getAuthToken();
+    if (!authToken) {
+      toast.error("Missing auth token. Please log in again.");
+      return;
+    }
+
+    const pdfReports = reports.filter(
+      (r) =>
+        r.mimeType.toLowerCase().includes("pdf") ||
+        r.originalName.toLowerCase().endsWith(".pdf")
+    );
+    if (pdfReports.length === 0) {
+      toast.info("No PDF reports available to summarize.");
+      return;
+    }
+
+    setSummaryLoading(true);
+    try {
+      let combined = "";
+
+      for (const report of pdfReports) {
+        try {
+          const url = `${fileBaseUrl}${report.publicUrl}`;
+          const res = await fetch(url);
+          if (!res.ok) continue;
+
+          const blob = await res.blob();
+          const file = new File([blob], report.originalName, {
+            type: blob.type || report.mimeType || "application/pdf",
+          });
+
+          const formData = new FormData();
+          formData.append(
+            "query",
+            "Provide a concise, patient-friendly structured summary of this medical report. Focus on: key findings, diagnoses, medications, tests, and recommended follow-ups."
+          );
+          formData.append("file", file);
+
+          const resp = await microserviceApi.post(
+            "/chatbot/query-with-file",
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${authToken}`,
+              },
+            }
+          );
+
+          const answer =
+            resp.data?.answer || resp.data?.text || "(No summary generated)";
+          combined += `### ${report.title || report.originalName}\n${answer}\n\n`;
+        } catch (err) {
+          console.error("Failed to summarize report", report.id, err);
+        }
+      }
+
+      if (!combined.trim()) {
+        toast.error("Could not generate summary from your reports.");
+        return;
+      }
+
+      setAiSummary(combined.trim());
+      setQaMessages([]);
+      toast.success("AI summary generated from your reports.");
+    } catch {
+      toast.error("Failed to generate AI summary.");
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
+  const handleAnalyzeReport = async (report: VaultReport) => {
+    if (!pinVerified) {
+      toast.error("Verify PIN before analyzing reports.");
+      return;
+    }
+    const authToken = getAuthToken();
+    if (!authToken) {
+      toast.error("Missing auth token. Please log in again.");
+      return;
+    }
+
+    const isPdf =
+      report.mimeType.toLowerCase().includes("pdf") ||
+      report.originalName.toLowerCase().endsWith(".pdf");
+
+    if (!isPdf) {
+      toast.info("AI analysis is currently available only for PDF reports.");
+      return;
+    }
+
+    setSummaryLoading(true);
+    try {
+      const url = `${fileBaseUrl}${report.publicUrl}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        toast.error("Failed to download report for analysis.");
+        return;
+      }
+
+      const blob = await res.blob();
+      const file = new File([blob], report.originalName, {
+        type: blob.type || report.mimeType || "application/pdf",
+      });
+
+      const formData = new FormData();
+      formData.append(
+        "query",
+        "Provide a concise, patient-friendly structured summary of this medical report. Focus on: key findings, diagnoses, medications, tests, and recommended follow-ups."
+      );
+      formData.append("file", file);
+
+      const resp = await microserviceApi.post(
+        "/chatbot/query-with-file",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+
+      const answer =
+        resp.data?.answer || resp.data?.text || "(No summary generated)";
+
+      setAiSummary(
+        `### ${report.title || report.originalName}\n${answer}`.trim()
+      );
+      setQaMessages([]);
+      toast.success("AI analysis generated for the selected report.");
+    } catch {
+      toast.error("Failed to analyze this report.");
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
+  const handleAskQuestion = async () => {
+    if (!pinVerified) {
+      toast.error("Verify PIN before asking questions.");
+      return;
+    }
+    if (!aiSummary) {
+      toast.error("Generate a summary first.");
+      return;
+    }
+    if (!qaQuestion.trim()) return;
+
+    const authToken = getAuthToken();
+    if (!authToken) {
+      toast.error("Missing auth token. Please log in again.");
+      return;
+    }
+
+    const text = qaQuestion.trim();
+    const userMsg = {
+      id: Date.now(),
+      sender: "user" as const,
+      text,
+    };
+    setQaMessages((prev) => [...prev, userMsg]);
+    setQaQuestion("");
+    setQaLoading(true);
+
+    try {
+      const query = `You are helping a patient understand their health records.
+
+Here is a consolidated AI-generated summary of their medical reports:
+${aiSummary}
+
+Now answer this question in a clear, concise way for the patient:
+${text}`;
+
+      const resp = await microserviceApi.post(
+        "/chatbot/query",
+        { query },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+
+      const answer =
+        resp.data?.answer ||
+        resp.data?.text ||
+        "Sorry, I couldn't process your request.";
+
+      const botMsg = {
+        id: Date.now() + 1,
+        sender: "bot" as const,
+        text: answer,
+      };
+      setQaMessages((prev) => [...prev, botMsg]);
+    } catch {
+      toast.error("Failed to get AI answer.");
+    } finally {
+      setQaLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // Intentionally do not auto-fetch until PIN is verified
   }, []);
 
   if (!isLoggedIn) return <BackToLogin />;
@@ -295,15 +519,27 @@ export default function HealthVaultPage() {
                         <span className="font-medium text-sm text-slate-800 truncate">
                           {report.title || report.originalName}
                         </span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleViewReport(report)}
-                          title="View report"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleViewReport(report)}
+                            title="View report"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleAnalyzeReport(report)}
+                            title="Analyze with AI"
+                            disabled={summaryLoading}
+                          >
+                            <Bot className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                       <span className="text-xs text-slate-500 truncate">
                         {report.originalName}
@@ -314,7 +550,8 @@ export default function HealthVaultPage() {
                       {!report.mimeType.toLowerCase().includes("pdf") &&
                         !report.originalName.toLowerCase().endsWith(".pdf") && (
                           <span className="text-[11px] text-amber-500">
-                            Non-PDF file &mdash; will open as download in your browser.
+                            Non-PDF file &mdash; will open as download in your
+                            browser.
                           </span>
                         )}
                     </li>
@@ -368,6 +605,163 @@ export default function HealthVaultPage() {
                     )}
                   </div>
                 )}
+              </div>
+            </section>
+
+            {/* AI summary + Q&A section */}
+            <section className="mt-8 rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+              <div className="flex items-center justify-between mb-4 gap-3">
+                <div className="flex items-center gap-2">
+                  <Bot className="w-5 h-5 text-blue-500" />
+                  <h2 className="text-lg font-semibold text-slate-800">
+                    AI summary & questions
+                  </h2>
+                </div>
+                <Button
+                  onClick={generateSummary}
+                  disabled={summaryLoading || reports.length === 0}
+                  className="bg-gradient-to-r from-blue-500 to-teal-500 text-white px-4 py-2 rounded-lg text-sm"
+                >
+                  {summaryLoading
+                    ? "Generating..."
+                    : "Generate summary from all reports"}
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Summary panel with markdown */}
+                <div className="border border-slate-200 rounded-lg p-3 text-sm min-h-[180px] max-h-[260px] overflow-y-auto">
+                  {aiSummary ? (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        table: ({ node, ...props }) => (
+                          <table
+                            className="min-w-full border border-slate-300 my-2 text-xs"
+                            {...props}
+                          />
+                        ),
+                        th: ({ node, ...props }) => (
+                          <th
+                            className="border px-2 py-1 bg-slate-200"
+                            {...props}
+                          />
+                        ),
+                        td: ({ node, ...props }) => (
+                          <td className="border px-2 py-1" {...props} />
+                        ),
+                        strong: ({ node, ...props }) => (
+                          <strong className="font-semibold" {...props} />
+                        ),
+                        p: ({ node, ...props }) => (
+                          <p className="mb-1 last:mb-0" {...props} />
+                        ),
+                      }}
+                    >
+                      {aiSummary}
+                    </ReactMarkdown>
+                  ) : (
+                    <span className="text-slate-400">
+                      No summary generated yet. Click &quot;Generate summary
+                      from all reports&quot; or use the Analyze button on a
+                      specific report.
+                    </span>
+                  )}
+                </div>
+
+                {/* Q&A panel with markdown for bot answers */}
+                <div className="flex flex-col h-full">
+                  <div className="flex-1 overflow-y-auto mb-3 space-y-2 text-sm max-h-[260px]">
+                    {qaMessages.length === 0 && (
+                      <p className="text-xs text-slate-400">
+                        After generating a summary, ask follow-up questions
+                        here. SwasthaAI will answer using your report summary.
+                      </p>
+                    )}
+                    {qaMessages.map((m) => (
+                      <div
+                        key={m.id}
+                        className={`flex ${
+                          m.sender === "user"
+                            ? "justify-end"
+                            : "justify-start"
+                        }`}
+                      >
+                        <div
+                          className={`max-w-[80%] rounded-lg px-3 py-2 ${
+                            m.sender === "user"
+                              ? "bg-blue-500 text-white"
+                              : "bg-slate-100 text-slate-800"
+                          }`}
+                        >
+                          {m.sender === "bot" ? (
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              components={{
+                                table: ({ node, ...props }) => (
+                                  <table
+                                    className="min-w-full border border-slate-300 my-2 text-xs"
+                                    {...props}
+                                  />
+                                ),
+                                th: ({ node, ...props }) => (
+                                  <th
+                                    className="border px-2 py-1 bg-slate-200"
+                                    {...props}
+                                  />
+                                ),
+                                td: ({ node, ...props }) => (
+                                  <td
+                                    className="border px-2 py-1"
+                                    {...props}
+                                  />
+                                ),
+                                strong: ({ node, ...props }) => (
+                                  <strong
+                                    className="font-semibold"
+                                    {...props}
+                                  />
+                                ),
+                                p: ({ node, ...props }) => (
+                                  <p className="mb-1 last:mb-0" {...props} />
+                                ),
+                              }}
+                            >
+                              {m.text}
+                            </ReactMarkdown>
+                          ) : (
+                            m.text
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                      placeholder="Ask a question about your reports..."
+                      value={qaQuestion}
+                      onChange={(e) => setQaQuestion(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !qaLoading) {
+                          handleAskQuestion();
+                        }
+                      }}
+                      disabled={qaLoading || !aiSummary}
+                    />
+                    <Button
+                      onClick={handleAskQuestion}
+                      disabled={
+                        qaLoading || !qaQuestion.trim() || !aiSummary
+                      }
+                      className="bg-gradient-to-r from-blue-500 to-teal-500 text-white px-3 py-2 rounded-lg"
+                      title="Send question"
+                    >
+                      {qaLoading ? "Asking..." : <Send className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </section>
           </>
