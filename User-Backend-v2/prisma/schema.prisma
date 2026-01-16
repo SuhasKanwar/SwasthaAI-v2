@@ -42,6 +42,7 @@ model User {
   termsAcceptance                         TermsAcceptance?
   healthRecords                           HealthRecord[]
   sharedRecords                           SharedRecord[]      @relation("SharedBy") // Records shared by this user
+  vaultFiles                              VaultFile[]        // Files stored in the vault
 
   @@map("users")
 }
@@ -506,4 +507,23 @@ model SharedRecord {
 
   @@unique([healthRecordId, recipientEmail]) // Prevent sharing the same record multiple times to the same email
   @@map("shared_records")
+}
+
+model VaultFile {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  title        String
+  notes        String?
+  recordType   String?
+  filename     String
+  originalName String   @map("original_name")
+  mimeType     String   @map("mime_type")
+  size         Int
+  path         String
+  publicUrl    String   @map("public_url")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("vault_files")
 }
