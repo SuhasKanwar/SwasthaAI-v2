@@ -6,6 +6,9 @@ import { userApi } from "@/lib/api";
 import BackToLogin from "@/components/BackToLogin";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
     Dialog,
     DialogContent,
@@ -32,6 +35,16 @@ type Appointment = {
     confirmationMessage?: string;
 };
 
+type MedicineForm = {
+    medicineName: string;
+    dosage: string;
+    frequency: string;
+    instructions: "BEFORE_MEAL" | "AFTER_MEAL" | "WITH_MEAL";
+    duration: string;
+    chemicalComposition: string;
+    form: string;
+};
+
 const statusColors: Record<string, string> = {
     "Pending Confirm": "bg-yellow-100 text-yellow-800 border-yellow-300",
     Confirmed: "bg-green-100 text-green-800 border-green-300",
@@ -53,6 +66,23 @@ export default function DoctorAppointmentsPage() {
         action: string;
     }>({ open: false, appointment: null, action: "" });
     const [updating, setUpdating] = useState(false);
+    const [prescriptionForm, setPrescriptionForm] = useState({
+        diagnosis: "",
+        symptoms: "",
+        doctorAdvice: "",
+        followUpDate: "",
+        medicines: [
+            {
+                medicineName: "",
+                dosage: "",
+                frequency: "",
+                instructions: "BEFORE_MEAL" as const,
+                duration: "",
+                chemicalComposition: "",
+                form: "tablet",
+            },
+        ] as MedicineForm[],
+    });
 
     // Get doctor ID
     useEffect(() => {
@@ -101,9 +131,42 @@ export default function DoctorAppointmentsPage() {
         if (!actionModal.appointment || !doctorId) return;
         try {
             setUpdating(true);
+            const payload: any = { appointmentStatus: status };
+
+            if (status === "Completed") {
+                const medicines = prescriptionForm.medicines
+                    .filter((m) => m.medicineName && m.dosage && m.frequency && m.duration && m.chemicalComposition)
+                    .map((m) => ({
+                        medicineName: m.medicineName.trim(),
+                        dosage: m.dosage.trim(),
+                        frequency: m.frequency.trim(),
+                        instructions: m.instructions,
+                        duration: Number(m.duration),
+                        chemicalComposition: m.chemicalComposition.trim(),
+                        form: m.form?.trim() || "tablet",
+                    }));
+
+                if (!prescriptionForm.diagnosis.trim() || !prescriptionForm.symptoms.trim() || medicines.length === 0) {
+                    toast.error("Please complete prescription details.");
+                    setUpdating(false);
+                    return;
+                }
+
+                payload.prescription = {
+                    diagnosis: prescriptionForm.diagnosis.trim(),
+                    symptoms: prescriptionForm.symptoms
+                        .split(",")
+                        .map((s) => s.trim())
+                        .filter(Boolean),
+                    doctorAdvice: prescriptionForm.doctorAdvice?.trim() || undefined,
+                    followUpDate: prescriptionForm.followUpDate || undefined,
+                    medicines,
+                };
+            }
+
             await userApi.patch(
                 `/api/doctors/${doctorId}/appointments/${actionModal.appointment.id}`,
-                { appointmentStatus: status }
+                payload
             );
             toast.success(`Appointment ${status.toLowerCase()}`);
             setActionModal({ open: false, appointment: null, action: "" });
@@ -235,7 +298,7 @@ export default function DoctorAppointmentsPage() {
                                             <Button
                                                 size="sm"
                                                 className="w-full"
-                                                onClick={() => setActionModal({ open: true, appointment: apt, action: "Completed" })}
+                                        onClick={() => setActionModal({ open: true, appointment: apt, action: "Completed" })}
                                             >
                                                 <CheckCircle className="w-3 h-3 mr-1" /> Mark Complete
                                             </Button>
@@ -250,7 +313,7 @@ export default function DoctorAppointmentsPage() {
 
             {/* Confirmation Modal */}
             <Dialog open={actionModal.open} onOpenChange={(open) => setActionModal({ ...actionModal, open })}>
-                <DialogContent>
+                <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>
                             {actionModal.action === "Confirmed" && "Confirm Appointment"}
@@ -262,6 +325,186 @@ export default function DoctorAppointmentsPage() {
                         Are you sure you want to {actionModal.action.toLowerCase()} the appointment with{" "}
                         <span className="font-semibold">{actionModal.appointment?.patientName}</span>?
                     </p>
+
+                    {actionModal.action === "Completed" && (
+                        <div className="mt-4 space-y-4">
+                            <div>
+                                <Label>Diagnosis *</Label>
+                                <Input
+                                    value={prescriptionForm.diagnosis}
+                                    onChange={(e) =>
+                                        setPrescriptionForm({ ...prescriptionForm, diagnosis: e.target.value })
+                                    }
+                                    placeholder="e.g., Acute gastritis"
+                                />
+                            </div>
+                            <div>
+                                <Label>Symptoms (comma separated) *</Label>
+                                <Input
+                                    value={prescriptionForm.symptoms}
+                                    onChange={(e) =>
+                                        setPrescriptionForm({ ...prescriptionForm, symptoms: e.target.value })
+                                    }
+                                    placeholder="e.g., abdominal pain, nausea"
+                                />
+                            </div>
+                            <div>
+                                <Label>Doctor Advice</Label>
+                                <Textarea
+                                    value={prescriptionForm.doctorAdvice}
+                                    onChange={(e) =>
+                                        setPrescriptionForm({ ...prescriptionForm, doctorAdvice: e.target.value })
+                                    }
+                                    rows={3}
+                                />
+                            </div>
+                            <div>
+                                <Label>Follow Up Date</Label>
+                                <Input
+                                    type="date"
+                                    value={prescriptionForm.followUpDate}
+                                    onChange={(e) =>
+                                        setPrescriptionForm({ ...prescriptionForm, followUpDate: e.target.value })
+                                    }
+                                />
+                            </div>
+
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <Label>Medicines *</Label>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                            setPrescriptionForm({
+                                                ...prescriptionForm,
+                                                medicines: [
+                                                    ...prescriptionForm.medicines,
+                                                    {
+                                                        medicineName: "",
+                                                        dosage: "",
+                                                        frequency: "",
+                                                        instructions: "BEFORE_MEAL",
+                                                        duration: "",
+                                                        chemicalComposition: "",
+                                                        form: "tablet",
+                                                    },
+                                                ],
+                                            })
+                                        }
+                                    >
+                                        Add Medicine
+                                    </Button>
+                                </div>
+
+                                {prescriptionForm.medicines.map((medicine, index) => (
+                                    <div key={index} className="border rounded-lg p-3 space-y-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            <div>
+                                                <Label>Medicine Name *</Label>
+                                                <Input
+                                                    value={medicine.medicineName}
+                                                    onChange={(e) => {
+                                                        const medicines = [...prescriptionForm.medicines];
+                                                        medicines[index] = { ...medicine, medicineName: e.target.value };
+                                                        setPrescriptionForm({ ...prescriptionForm, medicines });
+                                                    }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label>Dosage *</Label>
+                                                <Input
+                                                    value={medicine.dosage}
+                                                    onChange={(e) => {
+                                                        const medicines = [...prescriptionForm.medicines];
+                                                        medicines[index] = { ...medicine, dosage: e.target.value };
+                                                        setPrescriptionForm({ ...prescriptionForm, medicines });
+                                                    }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label>Frequency *</Label>
+                                                <Input
+                                                    value={medicine.frequency}
+                                                    onChange={(e) => {
+                                                        const medicines = [...prescriptionForm.medicines];
+                                                        medicines[index] = { ...medicine, frequency: e.target.value };
+                                                        setPrescriptionForm({ ...prescriptionForm, medicines });
+                                                    }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label>Duration (days) *</Label>
+                                                <Input
+                                                    type="number"
+                                                    value={medicine.duration}
+                                                    onChange={(e) => {
+                                                        const medicines = [...prescriptionForm.medicines];
+                                                        medicines[index] = { ...medicine, duration: e.target.value };
+                                                        setPrescriptionForm({ ...prescriptionForm, medicines });
+                                                    }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label>Chemical Composition *</Label>
+                                                <Input
+                                                    value={medicine.chemicalComposition}
+                                                    onChange={(e) => {
+                                                        const medicines = [...prescriptionForm.medicines];
+                                                        medicines[index] = { ...medicine, chemicalComposition: e.target.value };
+                                                        setPrescriptionForm({ ...prescriptionForm, medicines });
+                                                    }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label>Form</Label>
+                                                <Input
+                                                    value={medicine.form}
+                                                    onChange={(e) => {
+                                                        const medicines = [...prescriptionForm.medicines];
+                                                        medicines[index] = { ...medicine, form: e.target.value };
+                                                        setPrescriptionForm({ ...prescriptionForm, medicines });
+                                                    }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label>Instructions</Label>
+                                                <select
+                                                    className="w-full border rounded-lg px-3 py-2"
+                                                    value={medicine.instructions}
+                                                    onChange={(e) => {
+                                                        const medicines = [...prescriptionForm.medicines];
+                                                        medicines[index] = {
+                                                            ...medicine,
+                                                            instructions: e.target.value as MedicineForm["instructions"],
+                                                        };
+                                                        setPrescriptionForm({ ...prescriptionForm, medicines });
+                                                    }}
+                                                >
+                                                    <option value="BEFORE_MEAL">Before Meal</option>
+                                                    <option value="AFTER_MEAL">After Meal</option>
+                                                    <option value="WITH_MEAL">With Meal</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        {prescriptionForm.medicines.length > 1 && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="text-red-600 border-red-200"
+                                                onClick={() => {
+                                                    const medicines = prescriptionForm.medicines.filter((_, i) => i !== index);
+                                                    setPrescriptionForm({ ...prescriptionForm, medicines });
+                                                }}
+                                            >
+                                                Remove Medicine
+                                            </Button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                     <DialogFooter>
                         <Button
                             onClick={() => handleUpdateStatus(actionModal.action)}

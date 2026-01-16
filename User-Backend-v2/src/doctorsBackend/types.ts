@@ -68,6 +68,26 @@ export interface UpdateAppointmentStatus {
   confirmationMessage?: string;
   cancelReason?: string;
   prescriptionUrl?: string;
+  prescription?: {
+    diagnosis: string;
+    symptoms: string[];
+    doctorAdvice?: string;
+    followUpDate?: string;
+    medicines: Array<{
+      medicineName: string;
+      dosage: string;
+      frequency: string;
+      instructions: string;
+      duration: number;
+      chemicalComposition: string;
+      timeSlot?: Array<{
+        hour: string;
+        minute: string;
+        period: 'AM' | 'PM';
+      }>;
+      form?: string;
+    }>;
+  };
 }
 
 export interface AppointmentFilters {
