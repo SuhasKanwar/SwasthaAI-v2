@@ -43,13 +43,15 @@ export default function Sidebar({
         overflow: "hidden",
       }}
     >
-      <div className="flex items-center justify-center w-full mb-6">
+      {/* <div className="flex items-center justify-center w-full mb-6">
         <Logo />
         {expanded && (
           <span className="ml-2 text-lg font-bold bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent tracking-wide">
             SwasthaAI
           </span>
         )}
+      </div> */}
+      <div className="min-h-10">
       </div>
       <div className="w-full border-b border-blue-200 mb-4" />
       <div className="flex flex-col gap-2 w-full mt-6 px-2">
