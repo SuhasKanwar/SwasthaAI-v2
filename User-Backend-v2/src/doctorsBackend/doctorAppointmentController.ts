@@ -4,6 +4,16 @@ import { AppError } from '../utils/errors';
 import { UpdateAppointmentStatus, AppointmentFilters, AppointmentParams } from './types';
 
 export class DoctorAppointmentController {
+  private calculateAge(dateOfBirth: Date) {
+    const now = new Date();
+    let age = now.getFullYear() - dateOfBirth.getFullYear();
+    const monthDiff = now.getMonth() - dateOfBirth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < dateOfBirth.getDate())) {
+      age -= 1;
+    }
+    return Math.max(0, age);
+  }
+
   // Get doctor's appointments with filters
   getAppointments: RequestHandler<AppointmentParams, any, any, AppointmentFilters> = async (req, res, next) => {
     try {
@@ -176,6 +186,77 @@ export class DoctorAppointmentController {
         }
       }
 
+      let healthRecordId: string | undefined;
+
+      if (updateData.appointmentStatus === 'Completed') {
+        if (!updateData.prescription) {
+          throw new AppError(400, 'Prescription details are required to complete appointment');
+        }
+
+        const patient = await prisma.user.findUnique({
+          where: { id: existingAppointment.patientId }
+        });
+
+        if (!patient) {
+          throw new AppError(404, 'Patient not found');
+        }
+
+        const appointmentDate = existingAppointment.appointmentDate;
+        const patientAge = this.calculateAge(patient.dateOfBirth);
+
+        const record = await prisma.healthRecord.create({
+          data: {
+            user: {
+              connect: { id: existingAppointment.patientId }
+            },
+            date: appointmentDate,
+            doctorName: existingAppointment.doctorName,
+            doctorRegistrationNo: doctor.medicalRegistrationNumber,
+            doctorSpecialization: existingAppointment.specialization || doctor.specialty,
+            doctorProfilePictureUrl: doctor.profilePicture || null,
+            hospitalClinicName: existingAppointment.clinicName,
+            hospitalClinicAddress: existingAppointment.clinicAddress,
+            hospitalClinicLogoUrl: null,
+            status: 'UHP',
+            notes: existingAppointment.symptomsEntered || updateData.confirmationMessage,
+            shared: false,
+            recordType: 'PRESCRIPTION',
+            patientName: existingAppointment.patientName,
+            patientAge,
+            patientGender: patient.gender?.toUpperCase() || 'OTHER',
+            originalFileType: 'application/json',
+            originalFileName: 'uhp-record.json',
+            fileSize: 0,
+            prescription: {
+              create: {
+                prescriptionType: 'UHP',
+                diagnosis: updateData.prescription.diagnosis,
+                symptoms: updateData.prescription.symptoms,
+                doctorAdvice: updateData.prescription.doctorAdvice,
+                followUpDate: updateData.prescription.followUpDate
+                  ? new Date(updateData.prescription.followUpDate)
+                  : undefined,
+                medicines: {
+                  create: updateData.prescription.medicines.map((medicine) => ({
+                    medicineName: medicine.medicineName,
+                    dosage: medicine.dosage,
+                    frequency: medicine.frequency,
+                    instructions: medicine.instructions,
+                    duration: medicine.duration,
+                    chemicalComposition: medicine.chemicalComposition,
+                    timeSlot: medicine.timeSlot || [],
+                    form: medicine.form || 'tablet'
+                  }))
+                }
+              }
+            }
+          },
+          select: { id: true }
+        });
+
+        healthRecordId = record.id;
+      }
+
       const appointment = await prisma.appointment.update({
         where: { id },
         data: dataToUpdate
@@ -184,7 +265,10 @@ export class DoctorAppointmentController {
       res.json({
         status: 'success',
         message: `Appointment status updated to ${appointment.appointmentStatus}`,
-        data: appointment
+        data: {
+          appointment,
+          healthRecordId
+        }
       });
     } catch (error) {
       next(error);
