@@ -100,8 +100,15 @@ export type UpdateNotesInput = z.infer<typeof updateNotesSchema>;
 export type ShareRecordInput = z.infer<typeof shareRecordSchema>;
 
 // Schema for selecting medicines to create alerts for
+const medAlertTimeSlotSchema = z.object({
+  hour: z.string(),
+  minute: z.string(),
+  period: z.enum(["AM", "PM"])
+});
+
 export const createMedAlertSchema = z.object({
-  medicineIds: z.array(z.string()).min(1, "Select at least one medicine")
+  medicineIds: z.array(z.string()).min(1, "Select at least one medicine"),
+  timeSlot: z.array(medAlertTimeSlotSchema).default([])
 });
 
 export type CreateMedAlertInput = z.infer<typeof createMedAlertSchema>;

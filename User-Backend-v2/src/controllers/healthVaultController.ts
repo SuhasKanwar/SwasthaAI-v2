@@ -537,7 +537,7 @@ export class HealthVaultController {
   async createMedAlert(req: AuthRequest & { body: CreateMedAlertInput }, res: Response, next: NextFunction) {
     try {
       const { recordId } = req.params;
-      const { medicineIds } = req.body;
+      const { medicineIds, timeSlot } = req.body;
       
       // Validate UUID format
       if (!recordId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
@@ -615,7 +615,7 @@ export class HealthVaultController {
             startDate: record.date,
             endDate: new Date(record.date.getTime() + medicine.duration * 24 * 60 * 60 * 1000), // duration is in days
             notes: `From prescription dated ${record.date.toLocaleDateString()}\nDoctor: ${record.doctorName}`,
-            timeSlot: medicine.timeSlot || [],
+            timeSlot: timeSlot && timeSlot.length > 0 ? timeSlot : (medicine.timeSlot || []),
             form: medicine.form || "tablet",
             prescriptionId: recordId,
             isSuggested: true // Mark as suggested until user activates it

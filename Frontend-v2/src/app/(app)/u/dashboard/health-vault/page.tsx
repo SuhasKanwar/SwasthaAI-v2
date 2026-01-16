@@ -47,8 +47,13 @@ interface PrescriptionRecord {
     symptoms: string[];
     doctorAdvice?: string | null;
     followUpDate?: string | null;
-    medicines: PrescriptionMedicine[];
+    medicines: (PrescriptionMedicine & { id?: string })[];
   } | null;
+}
+
+interface MedAlertCategory {
+  id: string;
+  name: string;
 }
 
 export default function HealthVaultPage() {
@@ -62,6 +67,10 @@ export default function HealthVaultPage() {
   const [loadingReports, setLoadingReports] = useState(false);
   const [prescriptions, setPrescriptions] = useState<PrescriptionRecord[]>([]);
   const [loadingPrescriptions, setLoadingPrescriptions] = useState(false);
+  const [medAlertTimes, setMedAlertTimes] = useState<Record<string, string>>({});
+  const [creatingMedAlerts, setCreatingMedAlerts] = useState<Record<string, boolean>>({});
+  const [medAlertCategories, setMedAlertCategories] = useState<MedAlertCategory[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Record<string, string>>({});
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState("");
@@ -94,6 +103,7 @@ export default function HealthVaultPage() {
       toast.success("PIN verified. Health Vault unlocked.");
       fetchReports();
       fetchPrescriptions();
+      fetchMedAlertCategories();
     } catch (err: any) {
       const status = err?.response?.status;
       if (status === 401) {
@@ -131,6 +141,80 @@ export default function HealthVaultPage() {
       toast.error("Failed to load prescriptions.");
     } finally {
       setLoadingPrescriptions(false);
+    }
+  };
+
+  const fetchMedAlertCategories = async () => {
+    try {
+      const res = await userApi.get("/api/medalert/categories");
+      setMedAlertCategories(res.data || []);
+    } catch {
+      setMedAlertCategories([]);
+    }
+  };
+
+  const buildTimeSlot = (value: string) => {
+    if (!value) return [];
+    const [hourStr, minuteStr] = value.split(":");
+    const hourNum = Number(hourStr);
+    if (Number.isNaN(hourNum)) return [];
+    const period = hourNum >= 12 ? "PM" : "AM";
+    const hour12 = hourNum % 12 === 0 ? 12 : hourNum % 12;
+    return [
+      {
+        hour: String(hour12).padStart(2, "0"),
+        minute: minuteStr || "00",
+        period: period as "AM" | "PM",
+      },
+    ];
+  };
+
+  const handleCreateMedAlerts = async (record: PrescriptionRecord) => {
+    if (!pinVerified) {
+      toast.error("Verify PIN before creating alerts.");
+      return;
+    }
+    const timeValue = medAlertTimes[record.id];
+    if (!timeValue) {
+      toast.error("Select a reminder time first.");
+      return;
+    }
+    const categoryId = selectedCategoryIds[record.id];
+    if (!categoryId) {
+      toast.error("Select a category for these alerts.");
+      return;
+    }
+    const medicines = record.prescription?.medicines || [];
+    if (medicines.length === 0) {
+      toast.error("No medicines found in this prescription.");
+      return;
+    }
+    setCreatingMedAlerts((prev) => ({ ...prev, [record.id]: true }));
+    try {
+      const timeSlot = buildTimeSlot(timeValue);
+      const startDate = new Date().toISOString();
+
+      await Promise.all(
+        medicines.map((medicine) =>
+          userApi.post("/api/medalert/reminders", {
+            categoryId,
+            medicineName: medicine.medicineName,
+            dosage: medicine.dosage,
+            frequency: medicine.frequency,
+            startDate,
+            endDate: new Date(Date.now() + medicine.duration * 24 * 60 * 60 * 1000).toISOString(),
+            notes: `From prescription by ${record.doctorName}`,
+            timeSlot,
+            form: medicine.form || "tablet",
+          })
+        )
+      );
+
+      toast.success("Med alerts created. Check your Med Alerts.");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to create med alerts.");
+    } finally {
+      setCreatingMedAlerts((prev) => ({ ...prev, [record.id]: false }));
     }
   };
 
@@ -515,6 +599,47 @@ ${text}`;
                             </li>
                           ))}
                         </ul>
+                      </div>
+                      <div className="flex flex-col md:flex-row md:items-end gap-3">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs text-slate-500">Category</label>
+                          <select
+                            value={selectedCategoryIds[record.id] || ""}
+                            onChange={(e) =>
+                              setSelectedCategoryIds((prev) => ({
+                                ...prev,
+                                [record.id]: e.target.value,
+                              }))
+                            }
+                            className="border border-slate-300 rounded-lg px-3 py-2 bg-white"
+                          >
+                            <option value="">Select category</option>
+                            {medAlertCategories.map((category) => (
+                              <option key={category.id} value={category.id}>
+                                {category.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs text-slate-500">Reminder time</label>
+                          <input
+                            type="time"
+                            value={medAlertTimes[record.id] || ""}
+                            onChange={(e) =>
+                              setMedAlertTimes((prev) => ({ ...prev, [record.id]: e.target.value }))
+                            }
+                            className="border border-slate-300 rounded-lg px-3 py-2"
+                          />
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCreateMedAlerts(record)}
+                          disabled={creatingMedAlerts[record.id]}
+                        >
+                          {creatingMedAlerts[record.id] ? "Creating..." : "Create Med Alerts"}
+                        </Button>
                       </div>
                       {record.pdfUrl && (
                         <Button
