@@ -1,10 +1,11 @@
-import prisma from "@/config/prisma";
+import prisma from "../config/prisma";
 import express, { Request, Response, NextFunction, RequestHandler } from 'express';
 import { verifyToken as auth } from '../middleware/auth';
 import { AuthRequest } from '../types/auth.types';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
+import bcrypt from 'bcrypt'; // decrypt/verify hashed PIN
 
 const asHandler = (fn: (req: AuthRequest, res: Response, next: NextFunction) => any): RequestHandler => {
   return (req: Request, res: Response, next: NextFunction) => fn(req as AuthRequest, res, next);
@@ -41,12 +42,17 @@ router.post("/check-pin", asHandler(async (req, res) => {
             where: { id: req.user.id },
             select: { securityPin: true },
         });
-        if (!securityPin) {
+
+        if (!securityPin || !securityPin.securityPin) {
             return res.status(404).json({ message: "User not found" });
         }
-        if (securityPin.securityPin === pin) {
+
+        const isValid = await bcrypt.compare(pin, securityPin.securityPin);
+
+        if (isValid) {
             return res.status(200).json({ message: "PIN is correct" });
         }
+
         return res.status(401).json({ message: "Incorrect PIN" });
     }
     catch (error) {
@@ -89,6 +95,23 @@ router.post(
       });
     } catch (error) {
       return res.status(500).json({ message: "Failed to store report in DB" });
+    }
+  })
+);
+
+// List all vault reports for the logged-in user
+router.get(
+  "/reports",
+  asHandler(async (req, res) => {
+    try {
+      const reports = await prisma.vaultFile.findMany({
+        where: { userId: req.user.id },
+        orderBy: { createdAt: "desc" },
+      });
+
+      return res.status(200).json({ reports });
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to fetch reports" });
     }
   })
 );
