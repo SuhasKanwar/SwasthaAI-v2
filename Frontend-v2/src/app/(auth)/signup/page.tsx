@@ -44,6 +44,7 @@ export default function SignUpPage() {
     gender: "",
     dateOfBirth: "",
     role: "",
+    phoneNumber: "",
   });
   const { setToken, setRole } = useAuth();
   const router = useRouter();
@@ -128,6 +129,7 @@ export default function SignUpPage() {
           dateOfBirth: formData.dateOfBirth,
           gender: formData.gender,
           role: formData.role,
+          phoneNumber: formData.phoneNumber, // send phone number
         },
         {
           headers: {
@@ -152,6 +154,21 @@ export default function SignUpPage() {
   }
 
   const validateForm = () => {
+    if (!formData.phoneNumber.trim()) {
+      toast.error("Phone number required", {
+        description: "Please enter your phone number.",
+        icon: <AlertCircle className="w-4 h-4" />,
+      })
+      return false
+    }
+    // Simple phone validation: 8–15 digits
+    if (!/^\d{8,15}$/.test(formData.phoneNumber.trim())) {
+      toast.error("Invalid phone number", {
+        description: "Phone number should contain only digits (8–15 digits).",
+        icon: <AlertCircle className="w-4 h-4" />,
+      })
+      return false
+    }
     if (formData.password.length < 8) {
       toast.error("Password too short", {
         description: "Password must be at least 8 characters long.",
@@ -309,6 +326,22 @@ export default function SignUpPage() {
                   placeholder="Enter your last name"
                   value={formData.lastName}
                   onChange={(e) => handleInputChange("lastName", e.target.value)}
+                  className="bg-white/50 border-slate-200 focus:border-blue-400 focus:ring-blue-400"
+                  disabled={isLoading}
+                  required
+                />
+              </div>
+              {/* NEW: phone number field */}
+              <div className="space-y-2">
+                <Label htmlFor="phoneNumber" className="text-slate-700 font-medium">
+                  Phone Number
+                </Label>
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  placeholder="Enter your phone number"
+                  value={formData.phoneNumber}
+                  onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
                   className="bg-white/50 border-slate-200 focus:border-blue-400 focus:ring-blue-400"
                   disabled={isLoading}
                   required
