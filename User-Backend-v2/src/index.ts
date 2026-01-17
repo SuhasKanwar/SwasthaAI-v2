@@ -15,6 +15,7 @@ import medAlertRoutes from './routes/medAlertRoutes';
 import vaultRouter from './routes/vaultRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import path from 'path';
+import { startMedAlertScheduler } from './utils/medAlertScheduler';
 
 // Load environment variables
 config();
@@ -65,6 +66,7 @@ app.use(errorHandler as express.ErrorRequestHandler);
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  startMedAlertScheduler();
 });
 
 process.on('unhandledRejection', (err: Error) => {

@@ -23,6 +23,22 @@ export const loginSchema = z.object({
   email: z.string().email('Invalid email format')
 });
 
+export const whatsappRegisterSchema = z.object({
+  email: z.string().email('Invalid email format'),
+  phoneNumber: z.string().optional(),
+  countryCode: z.string().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+  gender: z.string().optional(),
+  defaultHomeScreen: z.enum(['Mental Health', 'Physical Health']).optional()
+});
+
+export const whatsappCheckSchema = z.object({
+  phoneNumber: z.string().min(4, 'Phone number is required'),
+  countryCode: z.string().optional()
+});
+
 export const loginPinSchema = z.object({
   email: z.string().email('Invalid email format'),
   securityPin: z.string().regex(/^\d{4}$|^\d{6}$/, 'Security PIN must be exactly 4 or 6 digits')

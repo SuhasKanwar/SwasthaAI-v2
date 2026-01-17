@@ -14,7 +14,9 @@ import {
   verifySecurityPin,
   refreshToken,
   updateProfile,
-  logout
+  logout,
+  whatsappRegister,
+  whatsappCheck
 } from '../../controllers/authController/authController';
 import {
   authenticatedChangePinSchema,
@@ -26,7 +28,9 @@ import {
   pinVerificationSchema,
   refreshTokenSchema,
   updateProfileSchema,
-  requestOtpSchema
+  requestOtpSchema,
+  whatsappRegisterSchema,
+  whatsappCheckSchema
 } from '../../validation/authSchemas';
 
 const router = Router();
@@ -41,6 +45,10 @@ router.post('/login', validateBody(loginSchema), login);
 router.post('/verify-login-pin', validateBody(loginPinSchema), verifyLoginPin);
 router.post('/verify-login-otp', validateBody(otpVerificationSchema), verifyLoginOTP);
 router.post('/refresh-token', validateBody(refreshTokenSchema), refreshToken);
+// WhatsApp registration (API key or token)
+router.post('/whatsapp-register', authenticateToken, validateBody(whatsappRegisterSchema), whatsappRegister);
+// WhatsApp check (API key or token)
+router.post('/whatsapp-check', authenticateToken, validateBody(whatsappCheckSchema), whatsappCheck);
 
 // Protected routes - apply authenticateToken middleware to each protected route
 router.post('/change-pin-authenticated', authenticateToken, validateBody(authenticatedChangePinSchema), changeAuthenticatedUserPin);

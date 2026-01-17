@@ -9,6 +9,7 @@ import {
 } from '../schemas/medAlertSchemas';
 import multer from 'multer';
 import { AuthRequest } from '../types/auth.types';
+import prisma from '../config/prisma';
 
 // Create a type helper for controllers that use AuthRequest
 const asHandler = (fn: (req: AuthRequest, res: Response, next: NextFunction) => any): RequestHandler => {
@@ -17,6 +18,96 @@ const asHandler = (fn: (req: AuthRequest, res: Response, next: NextFunction) => 
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
+
+const validateApiKey = (req: any, res: Response, next: NextFunction) => {
+  const apiKey = process.env.API_KEY;
+  const headerKey = req.headers?.['x-api-key'];
+  const bodyKey = req.body?.apiKey || req.body?.api_key;
+  if (!apiKey || (headerKey !== apiKey && bodyKey !== apiKey)) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  next();
+};
+
+// WhatsApp reminder creation (API key only, no JWT)
+router.post(
+  '/whatsapp/reminders',
+  validateApiKey,
+  async (req: Request & { body?: any }, res: Response) => {
+    try {
+      const { phoneNumber, countryCode, categoryId, reminders, timeSlot } = req.body;
+      if (!phoneNumber || !Array.isArray(reminders) || reminders.length === 0) {
+        return res.status(400).json({ error: 'phoneNumber and reminders are required' });
+      }
+
+      const user = await prisma.user.findFirst({
+        where: {
+          phoneNumber,
+          ...(countryCode ? { countryCode } : {})
+        },
+        select: { id: true }
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const normalizedCategoryId =
+        typeof categoryId === 'string' && categoryId.trim() ? categoryId.trim() : undefined;
+      let resolvedCategoryId = normalizedCategoryId;
+      if (!resolvedCategoryId) {
+        const existing = await prisma.medAlertCategory.findFirst({
+          where: {
+            userId: user.id,
+            name: 'WhatsApp Alerts'
+          }
+        });
+        if (existing) {
+          resolvedCategoryId = existing.id;
+        } else {
+          const created = await prisma.medAlertCategory.create({
+            data: {
+              userId: user.id,
+              name: 'WhatsApp Alerts',
+              description: 'Auto-created from WhatsApp onboarding',
+              color: '#2DD4BF'
+            }
+          });
+          resolvedCategoryId = created.id;
+        }
+      }
+
+      if (!resolvedCategoryId) {
+        return res.status(400).json({ error: 'Failed to resolve category for reminders' });
+      }
+      const finalCategoryId = resolvedCategoryId;
+
+      const normalizedTimeSlot = Array.isArray(timeSlot) ? timeSlot : [];
+
+      const created = await Promise.all(reminders.map((reminder: any) => {
+        return prisma.medAlertReminder.create({
+          data: {
+            userId: user.id,
+            categoryId: finalCategoryId,
+            medicineName: reminder.medicineName,
+            dosage: reminder.dosage,
+            frequency: reminder.frequency,
+            startDate: new Date(reminder.startDate),
+            endDate: reminder.endDate ? new Date(reminder.endDate) : null,
+            notes: reminder.notes || null,
+            timeSlot: normalizedTimeSlot,
+            form: reminder.form || 'tablet',
+            isSuggested: false
+          }
+        });
+      }));
+
+      res.status(201).json({ status: 'success', reminders: created });
+    } catch (error: any) {
+      res.status(400).json({ error: error?.message || 'Invalid reminder data' });
+    }
+  }
+);
 
 // All routes are protected
 router.use(asHandler(auth));

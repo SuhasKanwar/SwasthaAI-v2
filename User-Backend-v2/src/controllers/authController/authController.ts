@@ -12,7 +12,9 @@ import {
   otpVerificationSchema,
   pinVerificationSchema,
   updateProfileSchema,
-  requestOtpSchema
+  requestOtpSchema,
+  whatsappRegisterSchema,
+  whatsappCheckSchema
 } from '../../validation/authSchemas';
 import {
   AuthRequest,
@@ -95,6 +97,108 @@ export const requestOTP = async (
       message: isNewUser ? 'OTP sent successfully. Please verify to complete signup.' : 'OTP sent successfully. Please verify to complete login.',
       email,
       isNewUser
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * WhatsApp registration (no OTP/PIN). Requires API key.
+ */
+export const whatsappRegister = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const data = whatsappRegisterSchema.parse(req.body);
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email: data.email }
+    });
+
+    if (existingUser) {
+      const tokens = createTokens(existingUser.id, existingUser.email);
+      const userResponse = createUserResponse(existingUser);
+      res.status(200).json({
+        status: 'success',
+        message: 'User already registered',
+        token: tokens.accessToken,
+        user: userResponse
+      });
+      return;
+    }
+
+    if (data.phoneNumber) {
+      const existingUserWithPhone = await prisma.user.findFirst({
+        where: { phoneNumber: data.phoneNumber }
+      });
+      if (existingUserWithPhone) {
+        throw new AppError(400, 'Phone number is already in use');
+      }
+    }
+
+    const dateOfBirth = data.dateOfBirth ? new Date(data.dateOfBirth) : new Date();
+
+    const user = await prisma.user.create({
+      data: {
+        email: data.email,
+        phoneNumber: data.phoneNumber,
+        countryCode: data.countryCode,
+        firstName: data.firstName || 'WhatsApp',
+        lastName: data.lastName || 'User',
+        dateOfBirth,
+        gender: data.gender || 'Prefer not to say',
+        securityPin: '',
+        defaultHomeScreen: data.defaultHomeScreen || 'Physical Health',
+        role: 'patient'
+      }
+    });
+
+    const tokens = createTokens(user.id, user.email);
+    const userResponse = createUserResponse(user);
+
+    res.status(201).json({
+      status: 'success',
+      message: 'User registered via WhatsApp',
+      token: tokens.accessToken,
+      user: userResponse
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * WhatsApp check by phone number (no OTP/PIN). Requires API key.
+ */
+export const whatsappCheck = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const data = whatsappCheckSchema.parse(req.body);
+
+    const user = await prisma.user.findFirst({
+      where: {
+        phoneNumber: data.phoneNumber,
+        ...(data.countryCode ? { countryCode: data.countryCode } : {})
+      },
+      select: { id: true, email: true, role: true }
+    });
+
+    const doctor = await prisma.doctor.findFirst({
+      where: { email: user?.email },
+      select: { id: true, email: true }
+    });
+
+    res.status(200).json({
+      status: 'success',
+      exists: !!user,
+      hasDoctorProfile: !!doctor,
+      user: user || null
     });
   } catch (error) {
     next(error);
