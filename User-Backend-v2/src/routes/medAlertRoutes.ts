@@ -32,8 +32,8 @@ const validateApiKey = (req: any, res: Response, next: NextFunction) => {
 // WhatsApp reminder creation (API key only, no JWT)
 router.post(
   '/whatsapp/reminders',
-  validateApiKey,
-  async (req: Request & { body?: any }, res: Response) => {
+  asHandler(validateApiKey),
+  asHandler(async (req: Request & { body?: any }, res: Response) => {
     try {
       const { phoneNumber, countryCode, categoryId, reminders, timeSlot } = req.body;
       if (!phoneNumber || !Array.isArray(reminders) || reminders.length === 0) {
@@ -107,7 +107,7 @@ router.post(
       res.status(400).json({ error: error?.message || 'Invalid reminder data' });
     }
   }
-);
+));
 
 // All routes are protected
 router.use(asHandler(auth));
